@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model: Represents a user in the system
+model User {
+  id                       String                   @id @default(cuid())
+  name                     String?
+  email                    String?                  @unique
+  emailVerified            DateTime?
+  image                    String?
+  accounts                 Account[]
+  sessions                 Session[]
+  createdTransactions      Transaction[]            @relation("CreatedTransactions")
+  participatedTransactions TransactionParticipant[]
+  recurringExpenses        RecurringExpense[]
+  categories               Category[]
+  tags                     Tag[]
+  budgets                  Budget[]
+  AuditLog                 AuditLog[]
+
+  @@index([email])
+}
+
+// Account model: Represents OAuth accounts linked to a user
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refresh_token_expires_in Int?
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Session model: Represents a user session for authentication
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// VerificationToken model: Used for email verification or password reset
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Category model: Represents a category for organizing transactions
+model Category {
+  id        String          @id @default(uuid())
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  name      String
+  userId    String
+  icon      String
+  type      TransactionType
+
+  user         User                     @relation(fields: [userId], references: [id])
+  participants TransactionParticipant[]
+  budgets      Budget[]
+
+  @@unique([name, userId, type])
+  @@index([userId])
+}
+
+// Tag model: Represents a tag for labeling transactions
+model Tag {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  userId    String
+  color     String?
+  icon      String?
+
+  user         User                     @relation(fields: [userId], references: [id])
+  participants TransactionParticipant[]
+
+  @@unique([name, userId])
+  @@index([userId])
+}
+
+// Transaction model: Represents a financial transaction
+model Transaction {
+  id              String    @id @default(uuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  description     String
+  totalAmount     Decimal   @db.Decimal(10, 2)
+  date            DateTime
+  referenceNumber String?
+  notes           String?
+  creatorId       String
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  creator            User                     @relation("CreatedTransactions", fields: [creatorId], references: [id])
+  participants       TransactionParticipant[]
+  RecurringExpense   RecurringExpense?        @relation(fields: [recurringExpenseId], references: [id])
+  recurringExpenseId Int?
+
+  @@index([creatorId, date])
+}
+
+// PaymentMethod model: Represents a method of payment
+model PaymentMethod {
+  id   String  @id @default(uuid())
+  name String
+  icon String?
+
+  participantTransaction TransactionParticipant[]
+
+  @@unique([name])
+}
+
+// Budget model: Represents a budget set by a user
+model Budget {
+  id         String   @id @default(uuid())
+  userId     String
+  categoryId String
+  amount     Decimal  @db.Decimal(10, 2)
+  startDate  DateTime
+  endDate    DateTime
+  icon       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([userId, categoryId, startDate, endDate])
+}
+
+// RecurringExpense model: Represents a recurring financial obligation
+model RecurringExpense {
+  id          Int       @id @default(autoincrement())
+  description String
+  amount      Decimal   @db.Decimal(10, 2)
+  frequency   Frequency
+  startDate   DateTime
+  endDate     DateTime?
+  nextDueDate DateTime
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false) // Soft delete flag
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@index([userId, nextDueDate])
+}
+
+// TransactionParticipant model: Represents participants in a transaction (for split expenses)
+model TransactionParticipant {
+  id              String          @id @default(uuid())
+  transactionId   String
+  userId          String
+  amount          Decimal         @db.Decimal(10, 2)
+  type            TransactionType
+  categoryId      String
+  paymentMethodId String
+  description     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  transaction   Transaction   @relation(fields: [transactionId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  category      Category      @relation(fields: [categoryId], references: [id])
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  tags          Tag[]
+
+  @@index([transactionId])
+  @@index([userId, categoryId])
+}
+
+// AuditLog model: Used for logging changes or actions within the application
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  oldValue   Json? // Previous state of the entity
+  newValue   Json? // New state of the entity
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, entityType, entityId])
+}
+
+// Enum for transaction types
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+// Enum for recurring expense frequencies
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
