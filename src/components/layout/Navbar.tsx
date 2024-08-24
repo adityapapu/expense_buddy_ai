@@ -1,13 +1,13 @@
-import {
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  NavbarItem,
-  Link,
-  Button,
-} from "@nextui-org/react";
+import {Navbar, NavbarBrand, NavbarContent, NavbarItem} from "@nextui-org/navbar";
+import {Link} from "@nextui-org/link";
+import {auth} from "@/auth";
+import UserAvatarDropdown from "@/components/layout/UserAvatarDropdown";
 
-export default function NavbarComponent() {
+export default async function NavbarComponent() {
+    const session = await auth();
+    if(!session?.user){
+        return null;
+    }
   return (
     <Navbar>
       <NavbarBrand>
@@ -25,13 +25,9 @@ export default function NavbarComponent() {
           </Link>
         </NavbarItem>
       </NavbarContent>
-      <NavbarContent justify="end">
-        <NavbarItem>
-          <Button as={Link} color="primary" href="/signup" variant="flat">
-            Sign Up
-          </Button>
-        </NavbarItem>
-      </NavbarContent>
+        <NavbarContent as="div" justify="end">
+            <UserAvatarDropdown user={session.user}/>
+        </NavbarContent>
     </Navbar>
-  );
+);
 }
