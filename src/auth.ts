@@ -7,6 +7,6 @@ import Google from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [Google],
-    adapter: PrismaAdapter(db) as Adapter,
+    // adapter: PrismaAdapter(db) as Adapter,
     session: { strategy: "jwt" },
 });

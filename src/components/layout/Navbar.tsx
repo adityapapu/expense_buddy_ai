@@ -4,10 +4,10 @@ import {auth} from "@/auth";
 import UserAvatarDropdown from "@/components/layout/UserAvatarDropdown";
 
 export default async function NavbarComponent() {
-    const session = await auth();
-    if(!session?.user){
-        return null;
-    }
+    // const session = await auth();
+    // if(!session?.user){
+    //     return null;
+    // }
   return (
     <Navbar>
       <NavbarBrand>
@@ -26,7 +26,7 @@ export default async function NavbarComponent() {
         </NavbarItem>
       </NavbarContent>
         <NavbarContent as="div" justify="end">
-            <UserAvatarDropdown user={session.user}/>
+            {/* <UserAvatarDropdown user={session.user}/> */}
         </NavbarContent>
     </Navbar>
 );

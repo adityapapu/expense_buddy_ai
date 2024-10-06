@@ -15,15 +15,15 @@ export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     // Redirect unauthenticated users to the login page
-    // Exception: Don't redirect if already on login or logout page
-    if (!token && pathname !== '/login' && pathname !== "/logout") {
-        return NextResponse.redirect(new URL('/login', req.url));
-    }
+    // // Exception: Don't redirect if already on login or logout page
+    // if (!token && pathname !== '/login' && pathname !== "/logout") {
+    //     return NextResponse.redirect(new URL('/login', req.url));
+    // }
 
-    // Redirect authenticated users trying to access the logout page to the home page
-    if (token && pathname === '/logout') {
-        return NextResponse.redirect(new URL('/', req.url));
-    }
+    // // Redirect authenticated users trying to access the logout page to the home page
+    // if (token && pathname === '/logout') {
+    //     return NextResponse.redirect(new URL('/', req.url));
+    // }
 
     // For all other cases, continue with the request as normal
     return NextResponse.next();
