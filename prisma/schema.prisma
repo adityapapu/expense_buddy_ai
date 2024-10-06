@@ -24,6 +24,8 @@ model User {
   tags                     Tag[]
   budgets                  Budget[]
   AuditLog                 AuditLog[]
+    paymentMethods PaymentMethod[]
+
 
   @@index([email])
 }
@@ -128,14 +130,18 @@ model Transaction {
 
 // PaymentMethod model: Represents a method of payment
 model PaymentMethod {
-  id   String  @id @default(uuid())
-  name String
-  icon String?
+  id     String  @id @default(uuid())
+  name   String
+  icon   String?
+  userId String
 
+  user                   User                     @relation(fields: [userId], references: [id])
   participantTransaction TransactionParticipant[]
 
-  @@unique([name])
+  @@unique([name, userId])
+  @@index([userId])
 }
+
 
 // Budget model: Represents a budget set by a user
 model Budget {
