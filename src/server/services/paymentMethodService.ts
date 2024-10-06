@@ -3,6 +3,7 @@ import { getErrorMessage } from '@/utils/error';  // Make sure the path is corre
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/services/userService";
 import { PaymentMethod } from '@prisma/client';
+import { delay } from '@/lib/utils';
 
 interface CreatePaymentMethodData {
   name: string;
@@ -17,6 +18,11 @@ type CreatePaymentMethodResult = {
 
 export const createPaymentMethod = async (data: CreatePaymentMethodData): Promise<CreatePaymentMethodResult> => {
   try {
+
+    //fake wait of 3 sec
+    // await delay(6);
+
+
     const user = await getCurrentUser();
     console.log(user);
 
