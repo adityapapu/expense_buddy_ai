@@ -7,7 +7,8 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    DATABASE_URL: z.string().url(),
+    POSTGRES_PRISMA_URL: z.string(),
+    POSTGRES_URL_NON_POOLING: z.string(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -17,7 +18,7 @@ export const env = createEnv({
       // Since NextAuth.js automatically uses the VERCEL_URL if present.
       (str) => process.env.VERCEL_URL ?? str,
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
-      process.env.VERCEL ? z.string() : z.string().url()
+      process.env.VERCEL ? z.string() : z.string().url(),
     ),
     AUTH_GOOGLE_ID: z.string(),
     AUTH_GOOGLE_SECRET: z.string(),
@@ -37,7 +38,8 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
+    POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
+    POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
     NODE_ENV: process.env.NODE_ENV,
     AUTH_SECRET: process.env.AUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
