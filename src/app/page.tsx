@@ -4,6 +4,7 @@ import { FaMoneyBill } from "react-icons/fa";
 import EmojiPicker from "@/components/EmojiPicker";
 import PaymentMethod from "@/components/modals/PaymentMethod";
 import { useDisclosure } from "@nextui-org/react";
+import PaymentMethodList from "@/components/PaymentMethodList";
 
 export default function Page() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -19,11 +20,14 @@ export default function Page() {
       </Button>
       <Button onPress={onOpen}>Create a new payment method</Button>
       <EmojiPicker defaultIcon="🚫" onChange={handleEmojiChange} />
-       <PaymentMethod
+      <PaymentMethod
         isOpen={isOpen}
         onOpen={onOpen}
         onOpenChange={onOpenChange}
       />
+      <div className="h-auto w-[300px]">
+        <PaymentMethodList />
+      </div>
     </div>
   );
 }
