@@ -2,8 +2,7 @@
 import { getErrorMessage } from '../../utils/error';
 import { db } from "../db";
 import { getCurrentUser } from "./userService";
-import { type PaymentMethod } from '@prisma/client';
-import { delay } from '../../lib/utils';
+import { type PaymentMethod, type Prisma } from '@prisma/client';
 
 interface CreatePaymentMethodData {
   name: string;
@@ -25,6 +24,9 @@ type PaymentMethodResult = {
 interface CursorPaginationOptions {
   cursor?: string;
   pageSize: number;
+  filters?: {
+    name?: string;
+  };
 }
 
 type ListPaymentMethodsResult = {
@@ -134,16 +136,29 @@ export const listPaymentMethods = async (options: CursorPaginationOptions): Prom
       throw new Error("User not authenticated");
     }
 
-    const { cursor, pageSize } = options;
+    const { cursor, pageSize, filters = {} } = options;
+
+    const whereClause: Prisma.PaymentMethodWhereInput = {
+      userId: user.id,
+    };
+
+    if (cursor) {
+      whereClause.id = { gt: cursor };
+    }
+
+    if (filters.name) {
+      whereClause.name = {
+        contains: filters.name,
+        mode: 'insensitive'
+      };
+    }
+
     const totalCount = await db.paymentMethod.count({
-      where: { userId: user.id }
+      where: whereClause
     });
 
     const paymentMethods = await db.paymentMethod.findMany({
-      where: {
-        id: cursor ? { gt: cursor } : undefined,
-        userId: user.id
-      },
+      where: whereClause,
       take: pageSize + 1,
       orderBy: { id: 'asc' } 
     });

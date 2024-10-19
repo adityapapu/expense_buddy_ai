@@ -11,7 +11,7 @@ import { Input } from "@nextui-org/input";
 import EmojiPicker from "../EmojiPicker";
 import { createPaymentMethod, updatePaymentMethod } from "../../server/services/paymentMethodService";
 import { useToast } from "../../hooks/use-toast";
-import { PaymentMethod } from "@prisma/client";
+import { type PaymentMethod } from "@prisma/client";
 
 interface PaymentMethodModalProps {
   isOpen: boolean;
