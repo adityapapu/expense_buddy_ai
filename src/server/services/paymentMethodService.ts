@@ -1,23 +1,29 @@
 "use server";
-import { getErrorMessage } from '@/utils/error';  // Make sure the path is correct
-import { db } from "@/server/db";
-import { getCurrentUser } from "@/server/services/userService";
+import { getErrorMessage } from '../../utils/error';
+import { db } from "../db";
+import { getCurrentUser } from "./userService";
 import { type PaymentMethod } from '@prisma/client';
-import { delay } from '@/lib/utils';
+import { delay } from '../../lib/utils';
 
 interface CreatePaymentMethodData {
   name: string;
   icon?: string;
 }
 
-type CreatePaymentMethodResult = {
+interface UpdatePaymentMethodData {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
+type PaymentMethodResult = {
   success: boolean;
   message: string;
-  paymentMethod?: PaymentMethod; // Ideally, replace 'any' with the specific type you expect
+  paymentMethod?: PaymentMethod;
 };
 
 interface CursorPaginationOptions {
-  cursor?: string; // last payment method ID seen by the client
+  cursor?: string;
   pageSize: number;
 }
 
@@ -25,18 +31,13 @@ type ListPaymentMethodsResult = {
   success: boolean;
   message: string;
   paymentMethods?: PaymentMethod[];
-  nextCursor?: string | null;   // `null` indicates there are no more records
+  nextCursor?: string | null;
+  totalCount?: number;
 };
-export const createPaymentMethod = async (data: CreatePaymentMethodData): Promise<CreatePaymentMethodResult> => {
+
+export const createPaymentMethod = async (data: CreatePaymentMethodData): Promise<PaymentMethodResult> => {
   try {
-
-    //fake wait of 3 sec
-    // await delay(6);
-
-
     const user = await getCurrentUser();
-    console.log(user);
-
     if (!user?.id) {
       throw new Error("User not authenticated");
     }
@@ -80,43 +81,126 @@ export const createPaymentMethod = async (data: CreatePaymentMethodData): Promis
   }
 };
 
-
-export const listPaymentMethods= async (options: CursorPaginationOptions): Promise<ListPaymentMethodsResult & { totalCount?: number }> => {
+export const updatePaymentMethod = async (data: UpdatePaymentMethodData): Promise<PaymentMethodResult> => {
   try {
-      const user = await getCurrentUser();
-      if (!user?.id) {
-          throw new Error("User not authenticated");
+    const user = await getCurrentUser();
+    if (!user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      throw new Error("Payment method name is required");
+    }
+
+    const existingPaymentMethod = await db.paymentMethod.findFirst({
+      where: {
+        id: data.id,
+        userId: user.id
       }
+    });
 
-      const { cursor, pageSize } = options;
-      const totalCount = await db.paymentMethod.count({
-          where: { userId: user.id }
-      });
+    if (!existingPaymentMethod) {
+      throw new Error("Payment method not found");
+    }
 
-      const paymentMethods = await db.paymentMethod.findMany({
-          where: {
-              id: cursor ? { gt: cursor } : undefined,
-              userId: user.id
-          },
-          take: pageSize + 1,
-          orderBy: { id: 'asc' } 
-      });
+    const updatedPaymentMethod = await db.paymentMethod.update({
+      where: { id: data.id },
+      data: {
+        name: trimmedName,
+        icon: data.icon
+      }
+    });
 
-      const hasNextPage = paymentMethods.length > pageSize;
-      const returnPaymentMethods = hasNextPage ? paymentMethods.slice(0, -1) : paymentMethods;
-      return {
-          success: true,
-          message: "Payment methods fetched successfully",
-          paymentMethods: returnPaymentMethods,
-          nextCursor: hasNextPage ? returnPaymentMethods[returnPaymentMethods.length - 1].id : null,
-          totalCount: totalCount    // Including totalCount here
-      };
+    return { 
+      success: true, 
+      message: "Payment method updated successfully",
+      paymentMethod: updatedPaymentMethod 
+    };
 
   } catch (error) {
-      console.error('Error listing payment methods:', getErrorMessage(error));
-      return { 
-          success: false, 
-          message: getErrorMessage(error)
-      };
+    console.error('Error updating payment method:', getErrorMessage(error));
+    return { 
+      success: false,
+      message: getErrorMessage(error)
+    };
+  }
+};
+
+export const listPaymentMethods = async (options: CursorPaginationOptions): Promise<ListPaymentMethodsResult> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const { cursor, pageSize } = options;
+    const totalCount = await db.paymentMethod.count({
+      where: { userId: user.id }
+    });
+
+    const paymentMethods = await db.paymentMethod.findMany({
+      where: {
+        id: cursor ? { gt: cursor } : undefined,
+        userId: user.id
+      },
+      take: pageSize + 1,
+      orderBy: { id: 'asc' } 
+    });
+
+    const hasNextPage = paymentMethods.length > pageSize;
+    const returnPaymentMethods = hasNextPage ? paymentMethods.slice(0, -1) : paymentMethods;
+    const lastPaymentMethod = returnPaymentMethods[returnPaymentMethods.length - 1];
+    
+    return {
+      success: true,
+      message: "Payment methods fetched successfully",
+      paymentMethods: returnPaymentMethods,
+      nextCursor: hasNextPage && lastPaymentMethod ? lastPaymentMethod.id : null,
+      totalCount: totalCount
+    };
+
+  } catch (error) {
+    console.error('Error listing payment methods:', getErrorMessage(error));
+    return { 
+      success: false, 
+      message: getErrorMessage(error)
+    };
+  }
+};
+
+export const deletePaymentMethod = async (id: string): Promise<PaymentMethodResult> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const existingPaymentMethod = await db.paymentMethod.findFirst({
+      where: {
+        id: id,
+        userId: user.id
+      }
+    });
+
+    if (!existingPaymentMethod) {
+      throw new Error("Payment method not found");
+    }
+
+    await db.paymentMethod.delete({
+      where: { id: id }
+    });
+
+    return { 
+      success: true, 
+      message: "Payment method deleted successfully"
+    };
+
+  } catch (error) {
+    console.error('Error deleting payment method:', getErrorMessage(error));
+    return { 
+      success: false,
+      message: getErrorMessage(error)
+    };
   }
 };

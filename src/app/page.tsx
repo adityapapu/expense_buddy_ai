@@ -1,33 +1,15 @@
-"use client";
-import { Button } from "@nextui-org/button";
-import { FaMoneyBill } from "react-icons/fa";
-import EmojiPicker from "@/components/EmojiPicker";
-import PaymentMethod from "@/components/modals/PaymentMethod";
-import { useDisclosure } from "@nextui-org/react";
-import PaymentMethodList from "@/components/PaymentMethodList";
+import { listPaymentMethods } from "../server/services/paymentMethodService";
+import PageContent from "../components/PageContent";
 
-export default function Page() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+export default async function Page() {
+  try {
+    const result = await listPaymentMethods({ pageSize: 10 });
 
-  const handleEmojiChange = (newEmoji: string) => {
-    console.log("New emoji selected:", newEmoji);
-  };
+    const paymentMethods = result.success ? result.paymentMethods ?? [] : [];
 
-  return (
-    <div>
-      <Button color="success" endContent={<FaMoneyBill />}>
-        Add a new record
-      </Button>
-      <Button onPress={onOpen}>Create a new payment method</Button>
-      <EmojiPicker defaultIcon="🚫" onChange={handleEmojiChange} />
-      <PaymentMethod
-        isOpen={isOpen}
-        onOpen={onOpen}
-        onOpenChange={onOpenChange}
-      />
-      <div className="h-auto w-[300px]">
-        <PaymentMethodList />
-      </div>
-    </div>
-  );
+    return <PageContent initialPaymentMethods={paymentMethods} />;
+  } catch (error) {
+    console.error("Failed to fetch payment methods:", error);
+    return <div>Error: Failed to load payment methods. Please try again later.</div>;
+  }
 }
