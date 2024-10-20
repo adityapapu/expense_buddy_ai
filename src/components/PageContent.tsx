@@ -1,6 +1,7 @@
 "use client";
 
 import PaymentMethodList from "./PaymentMethodList";
+import TagSelector from "./TagSelector";
 
 export default function PageContent() {
  
@@ -11,6 +12,7 @@ export default function PageContent() {
         <PaymentMethodList 
         />
       </div>
+      <TagSelector />
     </div>
   );
 }
