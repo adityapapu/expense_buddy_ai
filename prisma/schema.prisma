@@ -134,7 +134,9 @@ model PaymentMethod {
   name   String
   icon   String?
   userId String
-
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   user                   User                     @relation(fields: [userId], references: [id])
   participantTransaction TransactionParticipant[]
 

@@ -160,7 +160,7 @@ export const listPaymentMethods = async (options: CursorPaginationOptions): Prom
     const paymentMethods = await db.paymentMethod.findMany({
       where: whereClause,
       take: pageSize + 1,
-      orderBy: { id: 'asc' } 
+      orderBy: { updatedAt: 'desc' } 
     });
 
     const hasNextPage = paymentMethods.length > pageSize;
