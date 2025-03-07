@@ -237,8 +237,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
 
   const topContent = useMemo(() => (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap justify-between gap-3 items-end">
-        <div className="flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row flex-wrap justify-between gap-3 items-start sm:items-end">
+        <div className="w-full sm:w-auto sm:flex-1 min-w-[200px]">
           <Input
             isClearable
             className="w-full"
@@ -248,7 +248,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
             onValueChange={onSearchChange}
           />
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-2 flex-wrap">
           <Button 
             color={typeFilter === "ALL" ? "primary" : "default"} 
             size="sm"
@@ -271,14 +271,14 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
             Income
           </Button>
         </div>
-        <div className="flex gap-2 ml-auto flex-shrink-0">
+        <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
           {selectedKeys.size > 0 && (
             <Button color="danger" onPress={handleBulkDelete} size="sm">
-              Delete Selected
+              Delete Selected ({selectedKeys.size})
             </Button>
           )}
-          <Button color="primary" onPress={onAddOpen}>
-            Add New Category
+          <Button color="primary" onPress={onAddOpen} className={selectedKeys.size > 0 ? "ml-auto sm:ml-2" : "ml-auto sm:ml-0"}>
+            Add New
           </Button>
         </div>
       </div>
@@ -306,11 +306,16 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
           base: "max-h-[520px] overflow-scroll",
           table: "min-h-[200px]",
           tbody: "overflow-auto",
-          th: "py-2 text-sm",
-          td: "py-1.5",
+          th: "py-2 text-xs sm:text-sm", // Smaller text for mobile
+          td: "py-1.5 text-xs sm:text-sm", // Smaller text for mobile
           tr: "h-12",
+          wrapper: "overflow-x-auto", // Allow horizontal scrolling on small screens
         }}
-        layout="auto"
+        layout={{
+          // Adjust column widths for better mobile display
+          xs: "fixed",
+          sm: "auto",
+        }}
         bottomContent={hasMore && !list.isLoading ? (
           <div className="flex w-full justify-center">
             <Spinner ref={loaderRef} color="white" size="sm" />
