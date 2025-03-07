@@ -13,14 +13,15 @@ import {
   Spinner,
   getKeyValue,
   Input,
-  Button
+  Button,
+  Chip
 } from "@nextui-org/react";
 import { EditIcon, DeleteIcon } from "./icons";
-import PaymentMethodModal from "./modals/PaymentMethod";
+import CategoryModal from "./modals/CategoryModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
 import { useToast } from "../hooks/use-toast";
-import { type PaymentMethod } from "@prisma/client";
-import { deletePaymentMethod, listPaymentMethods } from "../server/services/paymentMethodService";
+import { type Category, TransactionType } from "@prisma/client";
+import { deleteCategory, listCategories } from "../server/services/categoryService";
 import { useAsyncList } from "@react-stately/data";
 import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
 import useDebounce from "@/hooks/useDebounce";
@@ -33,65 +34,75 @@ interface Column {
 const columns: Column[] = [
   { uid: "name", name: "Name" },
   { uid: "icon", name: "Icon" },
+  { uid: "type", name: "Type" },
   { uid: "actions", name: "Actions" },
 ];
 
 const ITEMS_PER_PAGE = 10;
 
-interface PaymentMethodListProps {
-  initialPaymentMethods?: PaymentMethod[];
+interface CategoryListProps {
+  initialCategories?: Category[];
 }
 
-const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMethods = [] }) => {
+const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) => {
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<Set<React.Key>>(new Set());
   const { toast } = useToast();
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [filterValue, setFilterValue] = useState("");
+  const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
   const debouncedFilterValue = useDebounce(filterValue, 300);
   const initialLoadRef = useRef(true);
 
   const load = useCallback(async ({ cursor }: { cursor?: string }) => {
     try {
-      // For initial load, use the provided data if available and no filter is applied
-      if (!cursor && initialPaymentMethods.length > 0 && !debouncedFilterValue) {
-        setHasMore(initialPaymentMethods.length >= ITEMS_PER_PAGE);
+      // For initial load, use the provided data if available and no filters are applied
+      if (!cursor && initialCategories.length > 0 && !debouncedFilterValue && typeFilter === "ALL") {
+        setHasMore(initialCategories.length >= ITEMS_PER_PAGE);
         return {
-          items: initialPaymentMethods,
-          cursor: initialPaymentMethods.length >= ITEMS_PER_PAGE 
-            ? initialPaymentMethods[initialPaymentMethods.length - 1].id 
+          items: initialCategories,
+          cursor: initialCategories.length >= ITEMS_PER_PAGE 
+            ? initialCategories[initialCategories.length - 1].id 
             : undefined,
         };
       }
 
-      const response = await listPaymentMethods({
+      const filters: { name?: string; type?: TransactionType } = {
+        name: debouncedFilterValue.trim()
+      };
+      
+      if (typeFilter !== "ALL") {
+        filters.type = typeFilter;
+      }
+
+      const response = await listCategories({
         cursor,
         pageSize: ITEMS_PER_PAGE,
-        filters: { name: debouncedFilterValue.trim() }
+        filters
       });
 
       if (!response.success) throw new Error(response.message);
 
       setHasMore(!!response.nextCursor);
       return {
-        items: response.paymentMethods ?? [],
+        items: response.categories ?? [],
         cursor: response.nextCursor ?? undefined,
       };
     } catch (error) {
-      console.error("Failed to fetch payment methods:", error);
+      console.error("Failed to fetch categories:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load payment methods. Please try again later.",
+        description: "Failed to load categories. Please try again later.",
       });
       return { items: [] };
     }
-  }, [debouncedFilterValue, toast, initialPaymentMethods]);
+  }, [debouncedFilterValue, typeFilter, toast, initialCategories]);
 
-  const list = useAsyncList<PaymentMethod>({ load });
+  const list = useAsyncList<Category>({ load });
 
   useEffect(() => {
     if (initialLoadRef.current) {
@@ -99,32 +110,32 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
       return;
     }
     list.reload();
-  }, [debouncedFilterValue]);
+  }, [debouncedFilterValue, typeFilter]);
 
   const [loaderRef, scrollerRef] = useInfiniteScroll({
     hasMore,
     onLoadMore: () => list.loadMore(),
   });
 
-  const handleEdit = useCallback((method: PaymentMethod) => {
-    setSelectedMethod(method);
+  const handleEdit = useCallback((category: Category) => {
+    setSelectedCategory(category);
     onEditOpen();
   }, [onEditOpen]);
 
-  const handleDeleteConfirmation = useCallback((method: PaymentMethod) => {
-    setSelectedMethod(method);
+  const handleDeleteConfirmation = useCallback((category: Category) => {
+    setSelectedCategory(category);
     onDeleteOpen();
   }, [onDeleteOpen]);
 
   const handleDelete = async () => {
-    if (!selectedMethod) return;
+    if (!selectedCategory) return;
     try {
-      const result = await deletePaymentMethod(selectedMethod.id);
+      const result = await deleteCategory(selectedCategory.id);
       if (result.success) {
-        list.remove(selectedMethod.id);
+        list.remove(selectedCategory.id);
         toast({
-          title: "Payment method deleted",
-          description: "The payment method has been successfully deleted",
+          title: "Category deleted",
+          description: "The category has been successfully deleted",
         });
       } else {
         throw new Error(result.message);
@@ -135,7 +146,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
       toast({
         variant: "destructive",
         title: "An error occurred",
-        description: error instanceof Error ? error.message : "Failed to delete the payment method. Please try again later.",
+        description: error instanceof Error ? error.message : "Failed to delete the category. Please try again later.",
       });
     }
   };
@@ -145,7 +156,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
     try {
       const selectedIds = Array.from(selectedKeys);
       await Promise.all(selectedIds.map(async (id) => {
-        const result = await deletePaymentMethod(id as string);
+        const result = await deleteCategory(id as string);
         if (result.success) {
           list.remove(id as string);
         } else {
@@ -153,8 +164,8 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
         }
       }));
       toast({
-        title: "Payment methods deleted",
-        description: "The selected payment methods have been successfully deleted",
+        title: "Categories deleted",
+        description: "The selected categories have been successfully deleted",
       });
       setSelectedKeys(new Set());
     } catch (error) {
@@ -162,31 +173,31 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
       toast({
         variant: "destructive",
         title: "An error occurred",
-        description: error instanceof Error ? error.message : "Failed to delete the payment methods. Please try again later.",
+        description: error instanceof Error ? error.message : "Failed to delete the categories. Please try again later.",
       });
     }
   };
 
-  const handleSave = (updatedMethod: PaymentMethod) => {
-    list.update(updatedMethod.id, updatedMethod);
+  const handleSave = (updatedCategory: Category) => {
+    list.update(updatedCategory.id, updatedCategory);
     onEditClose();
   };
 
-  const handleAdd = (newMethod: PaymentMethod) => {
-    list.insert(0, newMethod);
+  const handleAdd = (newCategory: Category) => {
+    list.insert(0, newCategory);
     onAddClose();
   };
 
   const renderActionsCell = useCallback(
-    (method: PaymentMethod) => (
+    (category: Category) => (
       <div className="flex items-center justify-center gap-5">
-        <Tooltip content="Edit Payment Method">
-          <span className="cursor-pointer" onClick={() => handleEdit(method)}>
+        <Tooltip content="Edit Category">
+          <span className="cursor-pointer" onClick={() => handleEdit(category)}>
             <EditIcon />
           </span>
         </Tooltip>
-        <Tooltip color="danger" content="Delete Payment Method">
-          <span className="cursor-pointer" onClick={() => handleDeleteConfirmation(method)}>
+        <Tooltip color="danger" content="Delete Category">
+          <span className="cursor-pointer" onClick={() => handleDeleteConfirmation(category)}>
             <DeleteIcon />
           </span>
         </Tooltip>
@@ -196,9 +207,22 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
   );
 
   const renderCell = useCallback(
-    (method: PaymentMethod, columnKey: React.Key) => {
-      if (columnKey === "actions") return renderActionsCell(method);
-      return getKeyValue(method, columnKey as keyof PaymentMethod) as React.ReactNode;
+    (category: Category, columnKey: React.Key) => {
+      switch (columnKey) {
+        case "actions":
+          return renderActionsCell(category);
+        case "type":
+          return (
+            <Chip 
+              color={category.type === TransactionType.EXPENSE ? "danger" : "success"}
+              size="sm"
+            >
+              {category.type}
+            </Chip>
+          );
+        default:
+          return getKeyValue(category, columnKey as keyof Category) as React.ReactNode;
+      }
     },
     [renderActionsCell],
   );
@@ -207,28 +231,59 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
     setFilterValue(value);
   }, []);
 
+  const onTypeFilterChange = useCallback((value: TransactionType | "ALL") => {
+    setTypeFilter(value);
+  }, []);
+
   const topContent = useMemo(() => (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between gap-3 items-end">
-        <Input
-          isClearable
-          className="w-full sm:max-w-[44%]"
-          placeholder="Search by name..."
-          value={filterValue}
-          onClear={() => onSearchChange("")}
-          onValueChange={onSearchChange}
-        />
-        {selectedKeys.size > 0 && (
-          <Button color="danger" onPress={handleBulkDelete}>
-            Delete Selected
+      <div className="flex flex-wrap justify-between gap-3 items-end">
+        <div className="flex-1 min-w-[200px]">
+          <Input
+            isClearable
+            className="w-full"
+            placeholder="Search by name..."
+            value={filterValue}
+            onClear={() => onSearchChange("")}
+            onValueChange={onSearchChange}
+          />
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <Button 
+            color={typeFilter === "ALL" ? "primary" : "default"} 
+            size="sm"
+            onPress={() => onTypeFilterChange("ALL")}
+          >
+            All
           </Button>
-        )}
-        <Button color="primary" onPress={onAddOpen}>
-          Add New Payment Method
-        </Button>
+          <Button 
+            color={typeFilter === TransactionType.EXPENSE ? "primary" : "default"} 
+            size="sm"
+            onPress={() => onTypeFilterChange(TransactionType.EXPENSE)}
+          >
+            Expense
+          </Button>
+          <Button 
+            color={typeFilter === TransactionType.INCOME ? "primary" : "default"} 
+            size="sm"
+            onPress={() => onTypeFilterChange(TransactionType.INCOME)}
+          >
+            Income
+          </Button>
+        </div>
+        <div className="flex gap-2 ml-auto flex-shrink-0">
+          {selectedKeys.size > 0 && (
+            <Button color="danger" onPress={handleBulkDelete} size="sm">
+              Delete Selected
+            </Button>
+          )}
+          <Button color="primary" onPress={onAddOpen}>
+            Add New Category
+          </Button>
+        </div>
       </div>
     </div>
-  ), [filterValue, onSearchChange, onAddOpen, handleBulkDelete, selectedKeys]);
+  ), [filterValue, onSearchChange, onTypeFilterChange, typeFilter, onAddOpen, handleBulkDelete, selectedKeys]);
 
   const onSelectionChange = useCallback((keys: "all" | Set<React.Key>) => {
     if (keys === "all") {
@@ -241,7 +296,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
   return (
     <>
       <Table
-        aria-label="Payment Methods Table"
+        aria-label="Categories Table"
         baseRef={scrollerRef}
         topContent={topContent}
         selectionMode="multiple"
@@ -249,13 +304,13 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
         onSelectionChange={onSelectionChange}
         classNames={{
           base: "max-h-[520px] overflow-scroll",
-          table: "min-h-[200px]", // Reduced minimum height
+          table: "min-h-[200px]",
           tbody: "overflow-auto",
-          th: "py-2 text-sm", // Reduced header padding
-          td: "py-1.5", // Reduced cell padding
-          tr: "h-12", // Set fixed row height
+          th: "py-2 text-sm",
+          td: "py-1.5",
+          tr: "h-12",
         }}
-        layout="auto" // Let the table adjust based on content
+        layout="auto"
         bottomContent={hasMore && !list.isLoading ? (
           <div className="flex w-full justify-center">
             <Spinner ref={loaderRef} color="white" size="sm" />
@@ -267,7 +322,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
             <TableColumn
               key={column.uid}
               align={column.uid === "actions" ? "center" : "start"}
-              className="text-xs md:text-sm" // Responsive text size
+              className="text-xs md:text-sm"
             >
               {column.name}
             </TableColumn>
@@ -277,7 +332,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
           items={list.items}
           isLoading={list.isLoading && !initialLoadRef.current}
           loadingContent={<Spinner color="primary" size="sm" />}
-          emptyContent="No payment methods found"
+          emptyContent="No categories found"
         >
           {(item) => (
             <TableRow key={item.id} className="hover:bg-default-100 transition-colors">
@@ -290,18 +345,18 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
           )}
         </TableBody>
       </Table>
-      <PaymentMethodModal
+      <CategoryModal
         isOpen={isEditOpen || isAddOpen}
         onClose={isEditOpen ? onEditClose : onAddClose}
         onSave={isEditOpen ? handleSave : handleAdd}
-        paymentMethod={isEditOpen ? selectedMethod : null}
+        category={isEditOpen ? selectedCategory : null}
       />
       <ConfirmationModal
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
         onConfirm={handleDelete}
-        title="Delete Payment Method"
-        message="Are you sure you want to delete this payment method? This action cannot be undone."
+        title="Delete Category"
+        message="Are you sure you want to delete this category? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
       />
@@ -309,4 +364,4 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
   );
 };
 
-export default PaymentMethodList;
+export default CategoryList;
