@@ -3,18 +3,20 @@
 import { useState } from "react";
 import PaymentMethodList from "./PaymentMethodList";
 import CategoryList from "./CategoryList";
-import TagSelector from "./TagSelector";
+import TagList from "./TagList";
 import { Tabs, Tab } from "@nextui-org/react";
-import { type PaymentMethod, type Category } from "@prisma/client";
+import { type PaymentMethod, type Category, type Tag } from "@prisma/client";
 
 interface PageContentProps {
   initialPaymentMethods?: PaymentMethod[];
   initialCategories?: Category[];
+  initialTags?: Tag[];
 }
 
 export default function PageContent({ 
   initialPaymentMethods = [], 
-  initialCategories = [] 
+  initialCategories = [],
+  initialTags = []
 }: PageContentProps) {
   const [selectedTab, setSelectedTab] = useState("payment-methods");
  
@@ -37,7 +39,9 @@ export default function PageContent({
           </div>
         </Tab>
         <Tab key="tags" title="Tags">
-          <TagSelector />
+          <div className="h-auto w-full">
+            <TagList initialTags={initialTags} />
+          </div>
         </Tab>
       </Tabs>
     </div>
