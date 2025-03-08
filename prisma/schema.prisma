@@ -24,8 +24,11 @@ model User {
   tags                     Tag[]
   budgets                  Budget[]
   AuditLog                 AuditLog[]
-    paymentMethods PaymentMethod[]
-
+  paymentMethods           PaymentMethod[]
+  sentFriendRequests       FriendRequest[]          @relation("SentFriendRequests")
+  receivedFriendRequests   FriendRequest[]          @relation("ReceivedFriendRequests")
+  friends                  Friend[]                 @relation("UserFriends")
+  friendsOf                Friend[]                 @relation("FriendedByUsers")
 
   @@index([email])
 }
@@ -191,6 +194,9 @@ model TransactionParticipant {
   transactionId   String
   userId          String
   amount          Decimal         @db.Decimal(10, 2)
+  splitAmount     Decimal         @db.Decimal(10, 2)
+  splitType       SplitType       @default(EQUAL)
+  splitValue      Decimal?        @db.Decimal(10, 2)  // For percentage or shares
   type            TransactionType
   categoryId      String
   paymentMethodId String
@@ -224,6 +230,43 @@ model AuditLog {
   @@index([userId, entityType, entityId])
 }
 
+// Friend Request model: Represents a pending friend request
+model FriendRequest {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  status      FriendRequestStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sender      User     @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+// Friend model: Represents a confirmed friendship between two users
+model Friend {
+  id        String   @id @default(uuid())
+  userId    String
+  friendId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User     @relation("FriendedByUsers", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 // Enum for transaction types
 enum TransactionType {
   INCOME
@@ -236,4 +279,11 @@ enum Frequency {
   WEEKLY
   MONTHLY
   YEARLY
+}
+
+enum SplitType {
+  EQUAL
+  AMOUNT
+  PERCENTAGE
+  SHARES
 }
