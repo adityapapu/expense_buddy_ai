@@ -10,7 +10,7 @@ import {
   Button,
   Input,
   useDisclosure
-} from "@nextui-org/react";
+} from "@heroui/react";
 import { useToast } from "@/hooks/use-toast";
 import { type Tag } from "@prisma/client";
 import { createTag, updateTag } from "@/server/services/tagService";

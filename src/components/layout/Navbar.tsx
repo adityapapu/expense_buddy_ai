@@ -1,5 +1,5 @@
-import {Navbar, NavbarBrand, NavbarContent, NavbarItem} from "@nextui-org/navbar";
-import {Link} from "@nextui-org/link";
+import {Navbar, NavbarBrand, NavbarContent, NavbarItem} from "@heroui/navbar";
+import {Link} from "@heroui/link";
 import {auth} from "@/auth";
 import UserAvatarDropdown from "@/components/layout/UserAvatarDropdown";
 

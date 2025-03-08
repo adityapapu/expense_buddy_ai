@@ -18,7 +18,7 @@ import {
   Chip,
   ScrollShadow,
   Divider,
-} from "@nextui-org/react";
+} from "@heroui/react";
 import { useToast } from "@/hooks/use-toast";
 import { listFriendsAndRequests, sendFriendRequest, respondToFriendRequest, removeFriend } from "@/server/services/friendService";
 

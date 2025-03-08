@@ -5,7 +5,7 @@ import EmojiPickerReact, {
   type EmojiClickData,
   Theme,
 } from "emoji-picker-react";
-import { Button } from "@nextui-org/react";
+import { Button } from "@heroui/react";
 
 interface EmojiPickerProps {
   defaultIcon: string;

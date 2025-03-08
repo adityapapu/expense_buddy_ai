@@ -4,7 +4,7 @@ import { useState } from "react";
 import PaymentMethodList from "./PaymentMethodList";
 import CategoryList from "./CategoryList";
 import TagList from "./TagList";
-import { Tabs, Tab } from "@nextui-org/react";
+import { Tabs, Tab } from "@heroui/react";
 import { type PaymentMethod, type Category, type Tag } from "@prisma/client";
 
 interface PageContentProps {

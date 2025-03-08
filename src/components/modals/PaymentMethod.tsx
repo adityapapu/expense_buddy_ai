@@ -6,8 +6,8 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-} from "@nextui-org/react";
-import { Input } from "@nextui-org/input";
+} from "@heroui/react";
+import { Input } from "@heroui/input";
 import EmojiPicker from "../EmojiPicker";
 import { createPaymentMethod, updatePaymentMethod } from "../../server/services/paymentMethodService";
 import { useToast } from "../../hooks/use-toast";

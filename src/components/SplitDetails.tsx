@@ -15,7 +15,7 @@ import {
   TableBody,
   TableRow,
   TableCell
-} from "@nextui-org/react";
+} from "@heroui/react";
 
 // Define SplitType enum since it's not available in @prisma/client
 enum SplitType {

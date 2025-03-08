@@ -15,7 +15,7 @@ import {
   Input,
   Button,
   Chip
-} from "@nextui-org/react";
+} from "@heroui/react";
 import { EditIcon, DeleteIcon } from "./icons";
 import CategoryModal from "./modals/CategoryModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
@@ -23,7 +23,7 @@ import { useToast } from "../hooks/use-toast";
 import { type Category, TransactionType } from "@prisma/client";
 import { deleteCategory, listCategories } from "../server/services/categoryService";
 import { useAsyncList } from "@react-stately/data";
-import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
+import { useInfiniteScroll } from "@heroui/use-infinite-scroll";
 import useDebounce from "@/hooks/useDebounce";
 
 interface Column {

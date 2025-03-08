@@ -13,13 +13,13 @@ import {
   Button,
   useDisclosure,
   Chip
-} from "@nextui-org/react";
+} from "@heroui/react";
 import useDebounce from "@/hooks/useDebounce";
 import { useToast } from "@/hooks/use-toast";
 import { type Tag } from "@prisma/client";
 import { listTags, deleteTag } from "@/server/services/tagService";
 import { EditIcon, DeleteIcon } from "./icons";
-import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
+import { useInfiniteScroll } from "@heroui/use-infinite-scroll";
 import TagModal from "./modals/TagModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
 

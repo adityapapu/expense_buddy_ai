@@ -17,7 +17,7 @@ import {
   CardBody,
   CardHeader,
   type Selection
-} from "@nextui-org/react";
+} from "@heroui/react";
 import { useToast } from "@/hooks/use-toast";
 import { TransactionType } from "@prisma/client";
 import { createTransaction, updateTransaction } from "@/server/services/transactionService";

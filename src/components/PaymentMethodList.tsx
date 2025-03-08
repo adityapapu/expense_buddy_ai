@@ -14,7 +14,7 @@ import {
   getKeyValue,
   Input,
   Button
-} from "@nextui-org/react";
+} from "@heroui/react";
 import { EditIcon, DeleteIcon } from "./icons";
 import PaymentMethodModal from "./modals/PaymentMethod";
 import ConfirmationModal from "./modals/ConfirmationModal";
@@ -22,7 +22,7 @@ import { useToast } from "../hooks/use-toast";
 import { type PaymentMethod } from "@prisma/client";
 import { deletePaymentMethod, listPaymentMethods } from "../server/services/paymentMethodService";
 import { useAsyncList } from "@react-stately/data";
-import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
+import { useInfiniteScroll } from "@heroui/use-infinite-scroll";
 import useDebounce from "@/hooks/useDebounce";
 
 interface Column {

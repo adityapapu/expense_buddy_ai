@@ -20,13 +20,13 @@ import {
   Tooltip,
   Card,
   CardBody
-} from "@nextui-org/react";
+} from "@heroui/react";
 import useDebounce from "@/hooks/useDebounce";
 import { useToast } from "@/hooks/use-toast";
 import { TransactionType } from "@prisma/client";
 import { listTransactions, deleteTransaction } from "@/server/services/transactionService";
 import { EditIcon, DeleteIcon, EyeIcon } from "./icons";
-import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
+import { useInfiniteScroll } from "@heroui/use-infinite-scroll";
 import { format } from "date-fns";
 import TransactionModal from "./modals/TransactionModal";
 import ConfirmationModal from "./modals/ConfirmationModal";

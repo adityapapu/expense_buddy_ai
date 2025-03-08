@@ -8,8 +8,8 @@ import {
   Button,
   Select,
   SelectItem
-} from "@nextui-org/react";
-import { Input } from "@nextui-org/input";
+} from "@heroui/react";
+import { Input } from "@heroui/input";
 import EmojiPicker from "../EmojiPicker";
 import { createCategory, updateCategory } from "../../server/services/categoryService";
 import { useToast } from "../../hooks/use-toast";

@@ -2,7 +2,7 @@
 
 import { FcGoogle } from 'react-icons/fc';
 import { useRouter } from 'next/navigation';
-import { Button, Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 
 const LogoutPage = () => {
   const router = useRouter();
