@@ -1,25 +1,27 @@
-import { listTransactions } from "../../server/services/transactionService";
-import TransactionList from "../../components/TransactionList";
+import { auth } from "@/auth";
+import { getTransactions } from "@/lib/actions/transactions";
+import { getCategories, getPaymentMethods } from "@/lib/actions/filters";
+import { TransactionsPageContent } from "./transactions-page-content";
+import { redirect } from "next/navigation";
+import { getTransactionSummary } from "@/server/services/transactionService";
 
-export default async function Page() {
-  try {
-    // Fetch initial transactions
-    const transactionsResult = await listTransactions({ 
-      pageSize: 10,
-      sortBy: 'date',
-      sortOrder: 'desc'
-    });
-    
-    const transactions = transactionsResult.success ? transactionsResult.transactions ?? [] : [];
-
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Transactions</h1>
-        <TransactionList initialTransactions={transactions} />
-      </div>
-    );
-  } catch (error) {
-    console.error("Failed to fetch transaction data:", error);
-    return <div>Error: Failed to load transaction data. Please try again later.</div>;
+export default async function TransactionsPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
   }
+
+  const transactions = await getTransactions();
+  const categories = await getCategories();
+  const paymentMethods = await getPaymentMethods();
+  const summary = await getTransactionSummary("monthly");
+
+  return (
+    <TransactionsPageContent
+      transactions={transactions}
+      categories={categories}
+      paymentMethods={paymentMethods}
+      summary={summary}
+    />
+  );
 }

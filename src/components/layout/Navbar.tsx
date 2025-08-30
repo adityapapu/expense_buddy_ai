@@ -25,8 +25,28 @@ export default async function NavbarComponent() {
           </Link>
         </NavbarItem>
         <NavbarItem>
+          <Link color="foreground" href="/scan">
+            Scan & Pay
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="/budgets">
+            Budgets
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="/reports">
+            Reports
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
           <Link color="foreground" href="/friends">
             Friends
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="/settings">
+            Settings
           </Link>
         </NavbarItem>
       </NavbarContent>

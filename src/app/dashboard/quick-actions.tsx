@@ -1,8 +1,9 @@
 "use client"
 
-import { PlusIcon, ScanIcon, UsersIcon } from "lucide-react"
+import { PlusIcon, ScanIcon, UsersIcon, QrCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -17,12 +18,22 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function QuickActions() {
+  const router = useRouter()
   const [openAddTransaction, setOpenAddTransaction] = useState(false)
   const [openSplitBill, setOpenSplitBill] = useState(false)
   const [openScanReceipt, setOpenScanReceipt] = useState(false)
 
   return (
     <div className="flex flex-wrap gap-2">
+      {/* Scan & Pay QR Code Button */}
+      <Button 
+        variant="outline" 
+        className="gap-2" 
+        onClick={() => router.push('/scan')}
+      >
+        <QrCode className="h-4 w-4" />
+        Scan & Pay
+      </Button>
       {/* Add Transaction Button */}
       <Dialog open={openAddTransaction} onOpenChange={setOpenAddTransaction}>
         <DialogTrigger asChild>
