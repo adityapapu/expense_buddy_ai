@@ -1,15 +1,15 @@
 "use client"
 
-import type { DateRange } from "react-day-picker"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { ArrowDownIcon, ArrowUpIcon, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
+import type { DateRange } from "react-day-picker"
 
 interface ExpenseSummaryProps {
-  dateRange: DateRange | undefined
+  dateRange?: DateRange
 }
 
-export function ExpenseSummary({ dateRange }: ExpenseSummaryProps) {
+export function ExpenseSummary({ dateRange: _dateRange }: ExpenseSummaryProps) {
   // In a real app, you would fetch this data based on the date range
   // This is mock data for demonstration
   const summaryData = {

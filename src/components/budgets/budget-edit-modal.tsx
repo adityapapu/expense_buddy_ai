@@ -170,7 +170,7 @@ export function BudgetEditModal({ open, onOpenChange }: BudgetEditModalProps) {
                         value={totalBudget}
                         onChange={(e) =>
                           handleTotalBudgetChange(
-                            Number.parseFloat(e.target.value) || 0,
+                            Number.parseFloat(e.target.value) ?? 0,
                           )
                         }
                         className="pl-7"
@@ -181,7 +181,7 @@ export function BudgetEditModal({ open, onOpenChange }: BudgetEditModalProps) {
                       max={5000}
                       step={100}
                       onValueChange={(values) =>
-                        handleTotalBudgetChange(values[0])
+                        handleTotalBudgetChange(values[0] ?? 0)
                       }
                     />
                   </div>
@@ -247,13 +247,6 @@ export function BudgetEditModal({ open, onOpenChange }: BudgetEditModalProps) {
               <Progress
                 value={totalAllocated}
                 className="h-2"
-                indicatorClassName={
-                  totalAllocated > 100
-                    ? "bg-red-500"
-                    : totalAllocated === 100
-                      ? "bg-green-500"
-                      : "bg-yellow-500"
-                }
               />
 
               {totalAllocated !== 100 && (

@@ -284,7 +284,6 @@ export function DashboardSummaryCards() {
               <Progress
                 value={netBalancePercentage}
                 className="h-2"
-                indicatorClassName={netBalance >= 0 ? "bg-green-500" : "bg-red-500"}
               />
             </div>
           </CardContent>

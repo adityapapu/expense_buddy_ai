@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { listCategories } from './categoryService';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
+  apiKey: process.env.OPENAI_API_KEY ?? '',
 });
 
 interface TransactionSuggestion {
@@ -23,7 +23,7 @@ export async function generateTransactionSuggestion(
     const categoriesResponse = await listCategories({ pageSize: 100 });
     const categories = categoriesResponse.success ? categoriesResponse.categories : [];
     
-    const expenseCategories = categories?.filter(cat => cat.type === 'EXPENSE') || [];
+    const expenseCategories = categories?.filter(cat => cat.type === 'EXPENSE') ?? [];
     const categoryList = expenseCategories.map(cat => `${cat.name} (${cat.id})`).join(', ');
 
     const prompt = `You are an AI assistant for an expense tracking app. Given the following payment information:
@@ -132,7 +132,7 @@ Return only the improved description, no quotes or extra text.`;
     });
 
     const enhancedDescription = response.choices[0]?.message?.content?.trim();
-    return enhancedDescription || originalDescription;
+    return enhancedDescription ?? originalDescription;
   } catch (error) {
     console.error('Error enhancing description:', error);
     return originalDescription;

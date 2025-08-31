@@ -62,7 +62,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
         return {
           items: initialPaymentMethods,
           cursor: initialPaymentMethods.length >= ITEMS_PER_PAGE 
-            ? initialPaymentMethods[initialPaymentMethods.length - 1].id 
+            ? initialPaymentMethods[initialPaymentMethods.length - 1]?.id 
             : undefined,
         };
       }
@@ -99,7 +99,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
       return;
     }
     list.reload();
-  }, [debouncedFilterValue]);
+  }, [debouncedFilterValue, list]);
 
   const [loaderRef, scrollerRef] = useInfiniteScroll({
     hasMore,
@@ -140,7 +140,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     if (selectedKeys.size === 0) return;
     try {
       const selectedIds = Array.from(selectedKeys);
@@ -165,7 +165,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
         description: error instanceof Error ? error.message : "Failed to delete the payment methods. Please try again later.",
       });
     }
-  };
+  }, [list, selectedKeys, toast]);
 
   const handleSave = (updatedMethod: PaymentMethod) => {
     list.update(updatedMethod.id, updatedMethod);
@@ -245,7 +245,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
         baseRef={scrollerRef}
         topContent={topContent}
         selectionMode="multiple"
-        selectedKeys={selectedKeys}
+        selectedKeys={selectedKeys as any}
         onSelectionChange={onSelectionChange}
         classNames={{
           base: "max-h-[520px] overflow-scroll",

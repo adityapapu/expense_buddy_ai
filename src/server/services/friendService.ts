@@ -3,7 +3,7 @@
 import { getErrorMessage } from '../../utils/error';
 import { db } from "../db";
 import { getCurrentUser } from "./userService";
-import { Prisma, type User, type Friend, type FriendRequest } from "@prisma/client";
+import { type User, type Friend, type FriendRequest, FriendRequestStatus } from "@prisma/client";
 
 interface FriendResult {
   success: boolean;
@@ -266,7 +266,7 @@ export const listFriendsAndRequests = async (): Promise<ListFriendsResult> => {
     return {
       success: true,
       message: "Friends and requests fetched successfully",
-      friends: friends.map((f: Friend & { friend: User }) => f.friend),
+      friends: friends.map((f: any) => f.friend),
       pendingReceivedRequests,
       pendingSentRequests
     };

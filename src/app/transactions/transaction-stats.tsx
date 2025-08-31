@@ -4,7 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownIcon, ArrowUpIcon, IndianRupee } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
-export function TransactionStats({ summary }: { summary: any }) {
+interface SummaryData {
+  income: {
+    total: number;
+    change: number;
+  };
+  expenses: {
+    total: number;
+    change: number;
+  };
+  balance: {
+    total: number;
+    change: number;
+  };
+}
+
+interface TransactionStatsProps {
+  summary: {
+    success: boolean;
+    summary?: SummaryData;
+  };
+}
+
+export function TransactionStats({ summary }: TransactionStatsProps) {
   if (!summary.success || !summary.summary) {
     return <div>Error loading summary data.</div>;
   }

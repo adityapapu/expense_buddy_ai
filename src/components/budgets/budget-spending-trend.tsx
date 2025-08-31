@@ -1,12 +1,13 @@
 "use client"
 
-import { useRef } from "react"
+// useRef removed as it was unused
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js"
 import { Line } from "react-chartjs-2"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils";
 
 // Register Chart.js components
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
+
 
 // This would typically come from an API or database
 const trendData = {
@@ -34,7 +35,7 @@ const trendData = {
 }
 
 export function BudgetSpendingTrend() {
-  const chartRef = useRef<Chart | null>(null)
+  // Chart ref removed as it was unused
 
   const options = {
     responsive: true,
@@ -57,7 +58,7 @@ export function BudgetSpendingTrend() {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value: any) => formatCurrency(value),
+          callback: (value: any) => formatCurrency(Number(value)),
         },
       },
     },
@@ -65,7 +66,7 @@ export function BudgetSpendingTrend() {
 
   return (
     <div className="h-full w-full">
-      <Line data={trendData} options={options} />
+      <Line data={trendData} options={options as any} />
     </div>
   )
 }

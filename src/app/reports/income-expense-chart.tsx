@@ -1,16 +1,16 @@
 "use client"
 
-import type { DateRange } from "react-day-picker"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { formatCurrency } from "@/lib/utils"
+import type { DateRange } from "react-day-picker"
 
 interface IncomeExpenseChartProps {
-  dateRange: DateRange | undefined
+  dateRange?: DateRange
 }
 
-export function IncomeExpenseChart({ dateRange }: IncomeExpenseChartProps) {
+export function IncomeExpenseChart({ dateRange: _dateRange }: IncomeExpenseChartProps) {
   // In a real app, you would fetch this data based on the date range
   // This is mock data for demonstration
   const chartData = [

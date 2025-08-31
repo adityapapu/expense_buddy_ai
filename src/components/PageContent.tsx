@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import PaymentMethodList from "./PaymentMethodList";
+import dynamic from 'next/dynamic';
+
+const PaymentMethodList = dynamic(() => import('./PaymentMethodList'), { ssr: false });
 import CategoryList from "./CategoryList";
 import TagList from "./TagList";
 import { Tabs, Tab } from "@heroui/react";

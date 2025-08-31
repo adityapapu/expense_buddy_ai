@@ -1,17 +1,17 @@
 "use client"
 
-import type { DateRange } from "react-day-picker"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { formatCurrency } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { DateRange } from "react-day-picker"
 
 interface MonthlyTrendChartProps {
-  dateRange: DateRange | undefined
   selectedCategories: string[]
+  dateRange?: DateRange
 }
 
-export function MonthlyTrendChart({ dateRange, selectedCategories }: MonthlyTrendChartProps) {
+export function MonthlyTrendChart({ selectedCategories, dateRange: _dateRange }: MonthlyTrendChartProps) {
   // In a real app, you would fetch this data based on the date range and selected categories
   // This is mock data for demonstration
   const monthlyData = [

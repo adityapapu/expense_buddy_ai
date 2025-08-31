@@ -21,7 +21,7 @@ export default function WhySection() {
               </h2>
               <div className="space-y-4 text-muted-foreground">
                 <p className="text-lg">
-                  Every month, I struggled to understand where my money was going. I needed a tool that wasn't just a
+                  Every month, I struggled to understand where my money was going. I needed a tool that wasn&apos;t just a
                   generic expense tracker but one that could handle recurring costs like EMIs and subscriptions.
                 </p>
                 <p className="text-lg">

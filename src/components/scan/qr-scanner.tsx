@@ -17,38 +17,38 @@ export default function QRScannerComponent({
   isActive,
   onToggle,
 }: QRScannerProps) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleScan = (result: any) => {
+  const handleScan = (result: { text?: string } | string) => {
     if (result) {
-      onScanResult(result.text || result);
+      const text = typeof result === 'string' ? result : result.text ?? '';
+      onScanResult(text);
     }
   };
 
-  const handleError = (error: any) => {
+  const handleError = (error: unknown) => {
     console.error("QR Scanner Error:", error);
 
     let errorMessage = "Camera error occurred";
 
+    const errorObj = error as { name?: string; message?: string };
     if (
-      error?.name === "NotAllowedError" ||
-      error?.message?.includes("Permission denied")
+      errorObj?.name === "NotAllowedError" ||
+      errorObj?.message?.includes("Permission denied")
     ) {
       errorMessage =
         "Camera permission denied. Please allow camera access and try again.";
-      setHasPermission(false);
     } else if (
-      error?.name === "NotFoundError" ||
-      error?.message?.includes("No camera found")
+      errorObj?.name === "NotFoundError" ||
+      errorObj?.message?.includes("No camera found")
     ) {
       errorMessage = "No camera found on this device.";
-    } else if (error?.name === "NotSupportedError") {
+    } else if (errorObj?.name === "NotSupportedError") {
       errorMessage = "Camera not supported on this device.";
-    } else if (error?.name === "NotReadableError") {
+    } else if (errorObj?.name === "NotReadableError") {
       errorMessage = "Camera is already in use by another application.";
-    } else if (error?.message) {
-      errorMessage = error.message;
+    } else if (errorObj?.message) {
+      errorMessage = errorObj.message;
     }
 
     onError?.(errorMessage);
@@ -56,7 +56,6 @@ export default function QRScannerComponent({
 
   const handleRetry = () => {
     setIsLoading(true);
-    setHasPermission(null);
     setTimeout(() => {
       setIsLoading(false);
       onToggle();
@@ -110,21 +109,23 @@ export default function QRScannerComponent({
           {/* Scanner Area */}
           <div className="relative mx-auto aspect-square max-w-md overflow-hidden rounded-lg bg-black">
             <Scanner
-              onDecode={handleScan}
-              onError={handleError}
-              constraints={{
-                facingMode: "environment",
-              }}
-              scanDelay={300}
-              containerStyle={{
-                width: "100%",
-                height: "100%",
-              }}
-              videoStyle={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              {...{
+                onDecode: handleScan,
+                onError: handleError,
+                constraints: {
+                  facingMode: "environment",
+                },
+                scanDelay: 300,
+                containerStyle: {
+                  width: "100%",
+                  height: "100%",
+                },
+                videoStyle: {
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }
+              } as any}
             />
 
             {/* Scanning Overlay */}

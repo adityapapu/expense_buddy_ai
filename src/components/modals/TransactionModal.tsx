@@ -19,7 +19,31 @@ import {
   type Selection
 } from "@heroui/react";
 import { useToast } from "@/hooks/use-toast";
-import { TransactionType } from "@prisma/client";
+import { type Transaction, type Category, type PaymentMethod, type Tag, type User, TransactionType } from "@prisma/client";
+
+interface TransactionWithDetails extends Transaction {
+  participants: ParticipantWithDetails[];
+  tags: Tag[];
+}
+
+interface ParticipantWithDetails {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  description: string | null;
+  categoryId: string;
+  paymentMethodId: string;
+  userId: string;
+}
+
+type Friend = User;
+
+interface Split {
+    userId: string;
+    splitAmount: number;
+    splitType: string;
+    splitValue: number;
+}
 import { createTransaction, updateTransaction } from "@/server/services/transactionService";
 import { listCategories } from "@/server/services/categoryService";
 import { listPaymentMethods } from "@/server/services/paymentMethodService";
@@ -30,7 +54,7 @@ import SplitDetails from "@/components/SplitDetails";
 import { listFriendsAndRequests } from "@/server/services/friendService";
 
 interface TransactionModalProps {
-  transaction?: any;
+  transaction?: TransactionWithDetails;
   isOpen?: boolean;
   onClose?: () => void;
   onTransactionCreated?: () => void;
@@ -62,7 +86,7 @@ export default function TransactionModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Current user state for participants
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   
   // Participant state
   const [participantType, setParticipantType] = useState<TransactionType>(TransactionType.EXPENSE);
@@ -70,14 +94,14 @@ export default function TransactionModal({
   const [participantDescription, setParticipantDescription] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState("");
-  const [selectedTags, setSelectedTags] = useState<any[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   
   // Data for dropdowns
-  const [categories, setCategories] = useState<any[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
-  const [friends, setFriends] = useState<any[]>([]);
-  const [splits, setSplits] = useState<any[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [splits, setSplits] = useState<Split[]>([]);
 
   useEffect(() => {
     // Fetch current user
@@ -97,7 +121,7 @@ export default function TransactionModal({
       try {
         const friendsResponse = await listFriendsAndRequests();
         if (friendsResponse.success) {
-          setFriends(friendsResponse.friends || []);
+          setFriends((friendsResponse.friends as any) ?? []);
         }
 
         const categoriesResponse = await listCategories({ pageSize: 100 });
@@ -111,7 +135,7 @@ export default function TransactionModal({
           
           // Auto select first category if none selected and filtered categories exist
           if (!selectedCategoryId && filteredCategories.length > 0) {
-            setSelectedCategoryId(filteredCategories[0]?.id || "");
+            setSelectedCategoryId(filteredCategories[0]?.id ?? "");
           }
         }
 
@@ -120,7 +144,7 @@ export default function TransactionModal({
           setPaymentMethods(paymentMethodsResponse.paymentMethods);
           // Auto select first payment method if none selected and payment methods exist
           if (!selectedPaymentMethodId && paymentMethodsResponse.paymentMethods.length > 0) {
-            setSelectedPaymentMethodId(paymentMethodsResponse.paymentMethods[0]?.id || "");
+            setSelectedPaymentMethodId(paymentMethodsResponse.paymentMethods[0]?.id ?? "");
           }
         }
       } catch (error) {
@@ -128,9 +152,9 @@ export default function TransactionModal({
       }
     };
 
-    fetchUser();
-    fetchData();
-  }, [participantType]);
+    void fetchUser();
+    void fetchData();
+  }, [participantType, selectedCategoryId, selectedPaymentMethodId]);
 
   useEffect(() => {
     // Set read-only mode based on the mode prop
@@ -141,18 +165,20 @@ export default function TransactionModal({
       setDescription(transaction.description);
       setTotalAmount(transaction.totalAmount.toString());
       setTransactionDate(format(new Date(transaction.date), "yyyy-MM-dd"));
-      setReferenceNumber(transaction.referenceNumber || "");
-      setNotes(transaction.notes || "");
+      setReferenceNumber(transaction.referenceNumber ?? "");
+      setNotes(transaction.notes ?? "");
       
       // If there are participants, set the first one's data
       if (transaction.participants && transaction.participants.length > 0) {
         const participant = transaction.participants[0];
-        setParticipantType(participant.type);
-        setParticipantAmount(participant.amount.toString());
-        setParticipantDescription(participant.description || "");
-        setSelectedCategoryId(participant.categoryId);
-        setSelectedPaymentMethodId(participant.paymentMethodId);
-        setSelectedTags(participant.tags || []);
+        if (participant) {
+          setParticipantType(participant.type);
+          setParticipantAmount(participant.amount.toString());
+          setParticipantDescription(participant.description ?? "");
+          setSelectedCategoryId(participant.categoryId);
+          setSelectedPaymentMethodId(participant.paymentMethodId);
+          setSelectedTags([]);
+        }
       }
     } else {
       // Default values for new transaction
@@ -298,7 +324,7 @@ export default function TransactionModal({
         toast({
           variant: "destructive",
           title: "Error",
-          description: response.message || "An error occurred."
+          description: response.message ?? "An error occurred."
         });
       }
     } catch (error) {
@@ -340,11 +366,11 @@ export default function TransactionModal({
     setSelectedCategoryId("");
   };
   
-  const handleTagChange = (newTags: any[]) => {
+  const handleTagChange = (newTags: Tag[]) => {
     setSelectedTags(newTags);
   };
 
-  const handleSplitUpdate = (newSplits: any[]) => {
+  const handleSplitUpdate = (newSplits: Split[]) => {
     setSplits(newSplits);
   };
 
@@ -381,7 +407,7 @@ export default function TransactionModal({
         scrollBehavior="inside"
       >
         <ModalContent>
-          {(onClose) => (
+          {(_onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
                 {transaction 
@@ -518,7 +544,7 @@ export default function TransactionModal({
                         >
                           {filteredCategories.length > 0 ? (
                             filteredCategories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
+                              <SelectItem key={category.id} textValue={category.name}>
                                 {category.name}
                               </SelectItem>
                             ))
@@ -543,7 +569,7 @@ export default function TransactionModal({
                           selectionMode="single"
                         >
                           {paymentMethods.map((paymentMethod) => (
-                            <SelectItem key={paymentMethod.id} value={paymentMethod.id}>
+                            <SelectItem key={paymentMethod.id} textValue={paymentMethod.name}>
                               {paymentMethod.name}
                             </SelectItem>
                           ))}
@@ -573,10 +599,10 @@ export default function TransactionModal({
                         <SplitDetails
                           friends={friends}
                           totalAmount={parseFloat(totalAmount) || 0}
-                          onSplitUpdate={handleSplitUpdate}
+                          onSplitUpdate={handleSplitUpdate as any}
                           isReadOnly={isReadOnly}
-                          initialSplits={transaction?.participants.filter((p: any) => p.userId !== currentUser?.id) || []}
-                          currentUser={currentUser}
+                          initialSplits={transaction?.participants.filter((p) => p.userId !== currentUser?.id) as any}
+                          currentUser={currentUser as any}
                         />
                       </CardBody>
                     </Card>

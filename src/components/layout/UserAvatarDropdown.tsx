@@ -1,6 +1,6 @@
 "use client";
 import React from 'react'
-import {User} from "next-auth";
+import type {User} from "next-auth";
 import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@heroui/dropdown";
 import {Avatar} from "@heroui/avatar";
 import { signOut } from "next-auth/react"

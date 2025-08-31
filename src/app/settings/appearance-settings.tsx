@@ -13,13 +13,13 @@ import { useTheme } from "next-themes"
 
 const appearanceFormSchema = z.object({
   theme: z.enum(["light", "dark", "system"], {
-    required_error: "Please select a theme.",
+    message: "Please select a theme.",
   }),
   fontSize: z.enum(["small", "medium", "large"], {
-    required_error: "Please select a font size.",
+    message: "Please select a font size.",
   }),
   colorScheme: z.enum(["default", "blue", "green", "purple"], {
-    required_error: "Please select a color scheme.",
+    message: "Please select a color scheme.",
   }),
 })
 

@@ -71,7 +71,7 @@ export function BudgetCarryOver({ previousMonth, onCarryOver, onCustomize }: Bud
               <CopyIcon className="h-8 w-8 text-primary mb-2" />
               <h3 className="font-medium">Automatic Carry-Over</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                We'll use the same budget allocations for the current month.
+                We&apos;ll use the same budget allocations for the current month.
               </p>
             </div>
           </div>

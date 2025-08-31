@@ -125,7 +125,7 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
           <div className="text-sm text-muted-foreground">Step {step} of 3</div>
         </div>
         <CardDescription>
-          {step === 1 && "Let's start by setting your total monthly budget."}
+          {step === 1 && "Let&apos;s start by setting your total monthly budget."}
           {step === 2 && "Now, allocate your budget across different categories."}
           {step === 3 && "Review your budget allocation before saving."}
         </CardDescription>
@@ -143,7 +143,7 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
                   id="total-budget"
                   type="number"
                   value={totalBudget}
-                  onChange={(e) => handleTotalBudgetChange(Number.parseFloat(e.target.value) || 0)}
+                  onChange={(e) => handleTotalBudgetChange(Number.parseFloat(e.target.value) ?? 0)}
                   className="pl-7"
                 />
               </div>
@@ -158,7 +158,7 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
                 defaultValue={[totalBudget]}
                 max={10000}
                 step={100}
-                onValueChange={(values) => handleTotalBudgetChange(values[0])}
+                onValueChange={(values) => handleTotalBudgetChange(values[0] ?? 0)}
               />
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>$1,000</span>
@@ -172,7 +172,7 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
               <ul className="space-y-1 text-sm text-muted-foreground">
                 <li>• Consider using the 50/30/20 rule: 50% for needs, 30% for wants, 20% for savings</li>
                 <li>• Include all regular expenses like rent, utilities, groceries, and transportation</li>
-                <li>• Don't forget to budget for irregular expenses like annual subscriptions</li>
+                <li>• Don&apos;t forget to budget for irregular expenses like annual subscriptions</li>
                 <li>• Be realistic about your spending habits to create a sustainable budget</li>
               </ul>
             </div>
@@ -189,9 +189,6 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
             <Progress
               value={totalAllocated}
               className="h-2"
-              indicatorClassName={
-                totalAllocated > 100 ? "bg-red-500" : totalAllocated === 100 ? "bg-green-500" : "bg-yellow-500"
-              }
             />
 
             <div className="space-y-4">
@@ -264,8 +261,8 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
                 </h3>
                 <p className="text-sm">
                   {totalAllocated > 100
-                    ? `You've allocated ${(totalAllocated - 100).toFixed(1)}% (${formatCurrency(totalAllocatedAmount - totalBudget)}) more than your total budget.`
-                    : `You've only allocated ${totalAllocated.toFixed(1)}% of your budget. ${formatCurrency(totalBudget - totalAllocatedAmount)} remains unallocated.`}
+                    ? `You&apos;ve allocated ${(totalAllocated - 100).toFixed(1)}% (${formatCurrency(totalAllocatedAmount - totalBudget)}) more than your total budget.`
+                    : `You&apos;ve only allocated ${totalAllocated.toFixed(1)}% of your budget. ${formatCurrency(totalBudget - totalAllocatedAmount)} remains unallocated.`}
                 </p>
                 <Button variant="outline" size="sm" className="mt-2" onClick={() => setStep(2)}>
                   Adjust Allocation
@@ -278,9 +275,9 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
               <ul className="space-y-1 text-sm text-muted-foreground">
                 <li>• Your budget will be set for the current month</li>
                 <li>• You can track your spending against these categories</li>
-                <li>• You'll receive alerts when approaching category limits</li>
+                <li>• You&apos;ll receive alerts when approaching category limits</li>
                 <li>• You can adjust your budget at any time</li>
-                <li>• Next month, we'll suggest a new budget based on this one</li>
+                <li>• Next month, we&apos;ll suggest a new budget based on this one</li>
               </ul>
             </div>
           </div>

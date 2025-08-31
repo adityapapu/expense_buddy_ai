@@ -26,11 +26,7 @@ const budgetSummary = {
 export function BudgetOverview() {
   const [activeTab, setActiveTab] = useState("overview")
 
-  const getBudgetStatusColor = (percentage: number) => {
-    if (percentage < 70) return "bg-green-500"
-    if (percentage < 90) return "bg-yellow-500"
-    return "bg-red-500"
-  }
+  // getBudgetStatusColor function removed as it was unused
 
   return (
     <Card>
@@ -81,7 +77,6 @@ export function BudgetOverview() {
                   <Progress
                     value={budgetSummary.percentageUsed}
                     className="h-2"
-                    indicatorClassName={getBudgetStatusColor(budgetSummary.percentageUsed)}
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <div>{formatCurrency(budgetSummary.totalSpent)} spent</div>
@@ -96,7 +91,7 @@ export function BudgetOverview() {
                 <BellIcon className="h-4 w-4" />
                 <AlertTitle>Budget Alert</AlertTitle>
                 <AlertDescription>
-                  You've exceeded your budget in {budgetSummary.overBudgetCategories.length} categories:
+                  You&apos;ve exceeded your budget in {budgetSummary.overBudgetCategories.length} categories:
                   <ul className="mt-2 space-y-1">
                     {budgetSummary.overBudgetCategories.map((category) => (
                       <li key={category.name} className="text-sm">
@@ -114,7 +109,7 @@ export function BudgetOverview() {
                 <BellIcon className="h-4 w-4" />
                 <AlertTitle>Budget Warning</AlertTitle>
                 <AlertDescription>
-                  You're approaching your budget limit in {budgetSummary.nearLimitCategories.length} categories:
+                  You&apos;re approaching your budget limit in {budgetSummary.nearLimitCategories.length} categories:
                   <ul className="mt-2 space-y-1">
                     {budgetSummary.nearLimitCategories.map((category) => (
                       <li key={category.name} className="text-sm">

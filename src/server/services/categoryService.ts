@@ -2,7 +2,7 @@
 import { getErrorMessage } from '../../utils/error';
 import { db } from "../db";
 import { getCurrentUser } from "./userService";
-import { type Category, type Prisma, TransactionType } from '@prisma/client';
+import type { TransactionType, Category, Prisma } from '@prisma/client';
 
 interface CreateCategoryData {
   name: string;

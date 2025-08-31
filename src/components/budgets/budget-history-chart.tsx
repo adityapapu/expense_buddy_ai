@@ -1,48 +1,62 @@
 "use client"
 
-import { useRef } from "react"
+// useRef removed as it was unused
+import { formatCurrency } from "@/lib/utils";
 import {
   Chart,
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend,
-  PointElement,
-  LineElement,
-} from "chart.js"
-import { Bar, Line } from "react-chartjs-2"
-import { formatCurrency } from "@/lib/utils"
+} from 'chart.js'
+import { Bar, Line } from 'react-chartjs-2'
 
 // Register Chart.js components
 Chart.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend)
 
+interface CategoryData {
+  name: string;
+  budgeted: number;
+  spent: number;
+}
+
+interface MonthData {
+  label: string;
+  categories: CategoryData[];
+  totalBudget?: number;
+  totalSpent?: number;
+}
+
 interface BudgetHistoryChartProps {
-  data: any
-  type?: "comparison" | "trend" | "category"
-  category?: string
-  height?: number
+  data: MonthData | MonthData[];
+  type?: "comparison" | "trend" | "category";
+  category?: string;
+  height?: number;
 }
 
 export function BudgetHistoryChart({ data, type = "comparison", category, height = 400 }: BudgetHistoryChartProps) {
-  const chartRef = useRef<Chart | null>(null)
+  // Chart ref removed as it was unused
 
   if (type === "comparison") {
+    const comparisonData = data as MonthData;
     // Single month comparison chart (budget vs spent by category)
     const chartData = {
-      labels: data.categories.map((cat: any) => cat.name),
+      labels: comparisonData.categories.map((cat) => cat.name),
       datasets: [
         {
           label: "Budgeted",
-          data: data.categories.map((cat: any) => cat.budgeted),
+          data: comparisonData.categories.map((cat) => cat.budgeted),
           backgroundColor: "rgba(53, 162, 235, 0.5)",
           borderColor: "rgba(53, 162, 235, 1)",
           borderWidth: 1,
         },
         {
           label: "Spent",
-          data: data.categories.map((cat: any) => cat.spent),
+          data: comparisonData.categories.map((cat) => cat.spent),
           backgroundColor: "rgba(255, 99, 132, 0.5)",
           borderColor: "rgba(255, 99, 132, 1)",
           borderWidth: 1,
@@ -71,7 +85,7 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
         y: {
           beginAtZero: true,
           ticks: {
-            callback: (value: any) => formatCurrency(value),
+            callback: (value: any) => formatCurrency(Number(value)),
           },
         },
       },
@@ -79,19 +93,20 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
 
     return (
       <div style={{ height: `${height}px` }}>
-        <Bar data={chartData} options={options} />
+        <Bar data={chartData} options={options as any} />
       </div>
     )
   }
 
   if (type === "trend") {
+    const trendData = data as MonthData[];
     // Multi-month trend chart (total budget and spent over time)
     const chartData = {
-      labels: data.map((item: any) => item.label),
+      labels: trendData.map((item) => item.label),
       datasets: [
         {
           label: "Total Budget",
-          data: data.map((item: any) => item.totalBudget),
+          data: trendData.map((item) => item.totalBudget),
           borderColor: "rgba(53, 162, 235, 1)",
           backgroundColor: "rgba(53, 162, 235, 0.2)",
           borderWidth: 2,
@@ -99,7 +114,7 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
         },
         {
           label: "Total Spent",
-          data: data.map((item: any) => item.totalSpent),
+          data: trendData.map((item) => item.totalSpent),
           borderColor: "rgba(255, 99, 132, 1)",
           backgroundColor: "rgba(255, 99, 132, 0.2)",
           borderWidth: 2,
@@ -130,7 +145,7 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
         y: {
           beginAtZero: true,
           ticks: {
-            callback: (value: any) => formatCurrency(value),
+            callback: (value: any) => formatCurrency(Number(value)),
             display: height > 150,
           },
         },
@@ -150,9 +165,10 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
   }
 
   if (type === "category") {
+    const categoryTrendData = data as MonthData[];
     // Single category trend over time
-    const categoryData = data.map((item: any) => {
-      const cat = item.categories.find((c: any) => c.name === category)
+    const categoryData = categoryTrendData.map((item) => {
+      const cat = item.categories.find((c) => c.name === category)
       return {
         month: item.label,
         budgeted: cat ? cat.budgeted : 0,
@@ -161,11 +177,11 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
     })
 
     const chartData = {
-      labels: categoryData.map((item: any) => item.month),
+      labels: categoryData.map((item) => item.month),
       datasets: [
         {
           label: "Budgeted",
-          data: categoryData.map((item: any) => item.budgeted),
+          data: categoryData.map((item) => item.budgeted),
           borderColor: "rgba(53, 162, 235, 1)",
           backgroundColor: "rgba(53, 162, 235, 0.2)",
           borderWidth: 2,
@@ -173,7 +189,7 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
         },
         {
           label: "Spent",
-          data: categoryData.map((item: any) => item.spent),
+          data: categoryData.map((item) => item.spent),
           borderColor: "rgba(255, 99, 132, 1)",
           backgroundColor: "rgba(255, 99, 132, 0.2)",
           borderWidth: 2,
@@ -203,7 +219,7 @@ export function BudgetHistoryChart({ data, type = "comparison", category, height
         y: {
           beginAtZero: true,
           ticks: {
-            callback: (value: any) => formatCurrency(value),
+            callback: (value: any) => formatCurrency(Number(value)),
             display: height > 150,
           },
         },

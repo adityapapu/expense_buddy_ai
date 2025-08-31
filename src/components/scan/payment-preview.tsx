@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, Input, Button, Chip, Divider, Select, SelectItem, Spinner } from '@heroui/react';
 import { IndianRupee, User, CreditCard, Smartphone, RefreshCw, Sparkles } from 'lucide-react';
-import { UPIData, useUPIHandler } from './upi-handler';
+import type { UPIData } from './upi-handler';
+import { useUPIHandler } from './upi-handler';
 import { generateTransactionSuggestion } from '@/server/services/aiService';
 
 interface PaymentPreviewProps {
@@ -14,7 +15,12 @@ interface PaymentPreviewProps {
 
 export default function PaymentPreview({ upiData, onAmountChange, onPaymentInitiated, onError }: PaymentPreviewProps) {
   const [amount, setAmount] = useState<string>('');
-  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    description: string;
+    categoryId: string | null;
+    categoryName: string | null;
+    confidence: number;
+  } | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [selectedApp, setSelectedApp] = useState<string>('default');
 
@@ -45,7 +51,7 @@ export default function PaymentPreview({ upiData, onAmountChange, onPaymentIniti
       }
     };
 
-    generateSuggestion();
+    void generateSuggestion();
   }, [upiData.pa, upiData.pn, amount]);
 
   const handleAmountChange = (value: string) => {
@@ -138,7 +144,7 @@ export default function PaymentPreview({ upiData, onAmountChange, onPaymentIniti
                 size="sm"
                 color="primary"
                 variant="flat"
-                onPress={() => handleAmountChange(upiData.am!)}
+                onPress={() => handleAmountChange(upiData.am ?? '0')}
               >
                 Use ₹{upiData.am}
               </Button>
@@ -177,17 +183,17 @@ export default function PaymentPreview({ upiData, onAmountChange, onPaymentIniti
               <div className="space-y-2">
                 <div>
                   <p className="text-sm text-default-500">Suggested Description</p>
-                  <p className="font-medium">{aiSuggestion.description}</p>
+                  <p className="font-medium">{aiSuggestion?.description ?? 'No description available'}</p>
                 </div>
-                {aiSuggestion.categoryName && (
+                {aiSuggestion?.categoryName && (
                   <div>
                     <p className="text-sm text-default-500">Category</p>
                     <div className="flex items-center gap-2">
                       <Chip size="sm" color="secondary" variant="flat">
-                        {aiSuggestion.categoryName}
+                        {aiSuggestion?.categoryName}
                       </Chip>
                       <span className="text-xs text-default-400">
-                        {Math.round(aiSuggestion.confidence * 100)}% confident
+                        {Math.round((aiSuggestion?.confidence ?? 0) * 100)}% confident
                       </span>
                     </div>
                   </div>
@@ -214,10 +220,12 @@ export default function PaymentPreview({ upiData, onAmountChange, onPaymentIniti
               onSelectionChange={(keys) => setSelectedApp(Array.from(keys)[0] as string)}
               size="sm"
             >
-              <SelectItem key="default">Any UPI App</SelectItem>
-              {availableApps.map((app) => (
-                <SelectItem key={app.packageName}>{app.name}</SelectItem>
-              ))}
+              {[
+                <SelectItem key="default">Any UPI App</SelectItem>,
+                ...availableApps.map((app) => (
+                  <SelectItem key={app.packageName}>{app.name}</SelectItem>
+                ))
+              ]}
             </Select>
           </CardBody>
         </Card>

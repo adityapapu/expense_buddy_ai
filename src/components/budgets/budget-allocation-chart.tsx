@@ -1,12 +1,21 @@
 "use client"
 
-import { useRef } from "react"
+import React from "react"
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js"
 import { Doughnut } from "react-chartjs-2"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils";
 
 // Register Chart.js components
 Chart.register(ArcElement, Tooltip, Legend)
+
+interface TooltipContext {
+  label: string;
+  raw: unknown;
+  dataset: {
+    data: number[];
+  };
+  dataIndex: number;
+}
 
 // This would typically come from an API or database
 const budgetData = [
@@ -21,7 +30,7 @@ const budgetData = [
 ]
 
 export function BudgetAllocationChart() {
-  const chartRef = useRef<Chart | null>(null)
+  // Chart ref removed as it was unused
 
   const chartData = {
     labels: budgetData.map((item) => item.category),
@@ -54,13 +63,13 @@ export function BudgetAllocationChart() {
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
-            const label = context.label || ""
-            const value = context.raw || 0
+          label: (context: TooltipContext) => {
+            const label = context.label ?? ""
+            const value = typeof context.raw === 'number' ? context.raw : 0
             const dataset = context.dataset
             const total = dataset.data.reduce((acc: number, data: number) => acc + data, 0)
             const percentage = ((value / total) * 100).toFixed(1)
-            const spent = budgetData[context.dataIndex].spent
+            const spent = budgetData[context.dataIndex]?.spent ?? 0
             const spentPercentage = ((spent / value) * 100).toFixed(1)
 
             return [
@@ -76,7 +85,7 @@ export function BudgetAllocationChart() {
   return (
     <div className="h-full w-full flex flex-col md:flex-row items-center justify-center gap-4">
       <div className="h-[300px] w-full md:w-1/2">
-        <Doughnut data={chartData} options={options} />
+        <Doughnut data={chartData} options={options as any} />
       </div>
       <div className="w-full md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-2">
         {budgetData.map((item) => (

@@ -17,7 +17,7 @@ interface CategoryBreakdownProps {
   totalSpent: number
 }
 
-export function CategoryBreakdown({ data, totalSpent }: CategoryBreakdownProps) {
+export function CategoryBreakdown({ data, totalSpent: _totalSpent }: CategoryBreakdownProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Category Breakdown</h3>

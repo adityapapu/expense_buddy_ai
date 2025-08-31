@@ -49,9 +49,10 @@ export async function getTransactions(): Promise<Transaction[]> {
   // In the future, we should update the frontend to handle the normalized data structure.
   return transactions.map((t) => {
     const participant = t.participants[0]; // Assuming single participant for now
+    if (!participant) return null;
     return {
       id: t.id,
-      date: t.date.toISOString().split("T")[0],
+      date: t.date?.toISOString().split("T")[0],
       description: t.description,
       amount:
         participant.type === "INCOME"
@@ -77,7 +78,7 @@ export async function getTransactions(): Promise<Transaction[]> {
           : undefined,
       notes: t.notes,
     };
-  });
+  }).filter(Boolean) as any;
 }
 
 import { auth } from "@/auth";

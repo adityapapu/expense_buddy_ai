@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils"
-import type { Transaction } from "./transaction-data"
+import type { Transaction } from "@/lib/actions/transactions"
 import { SplitIcon } from "lucide-react"
 
 interface TransactionDetailsDialogProps {
@@ -60,7 +60,7 @@ export function TransactionDetailsDialog({
             </div>
             <div>
               <p className="text-sm font-medium">Type</p>
-              <Badge variant={transaction.type === "income" ? "success" : "destructive"} className="mt-1">
+              <Badge variant={transaction.type === "income" ? "default" : "destructive"} className="mt-1">
                 {transaction.type === "income" ? "Income" : "Expense"}
               </Badge>
             </div>

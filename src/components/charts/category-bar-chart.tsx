@@ -1,11 +1,12 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js"
 import { Bar } from "react-chartjs-2"
 
 // Register Chart.js components
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+
 
 interface CategoryData {
   category: string
@@ -19,7 +20,7 @@ interface CategoryBarChartProps {
 }
 
 export function CategoryBarChart({ data }: CategoryBarChartProps) {
-  const chartRef = useRef<Chart | null>(null)
+  // Chart ref removed as it was unused
   const [isMobile, setIsMobile] = useState(false)
 
   // Safely handle window with useEffect
@@ -62,8 +63,8 @@ export function CategoryBarChart({ data }: CategoryBarChartProps) {
       tooltip: {
         callbacks: {
           label: (context: any) => {
-            const label = context.dataset.label || ""
-            const value = context.raw || 0
+            const label = context.dataset.label ?? ""
+            const value = context.raw ?? 0
             const percentage = ((value / data.reduce((sum, item) => sum + item.amount, 0)) * 100).toFixed(1)
             return `${label}: $${value.toFixed(2)} (${percentage}%)`
           },
@@ -96,7 +97,7 @@ export function CategoryBarChart({ data }: CategoryBarChartProps) {
 
   return (
     <div className="h-full w-full">
-      <Bar data={chartData} options={options} />
+      <Bar data={chartData} options={options as any} />
     </div>
   )
 }

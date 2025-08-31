@@ -67,20 +67,20 @@ const budgetHistory = [
 
 export function BudgetHistory() {
   const [viewType, setViewType] = useState("table")
-  const [selectedMonth, setSelectedMonth] = useState(budgetHistory[budgetHistory.length - 1].month)
+  const [selectedMonth, setSelectedMonth] = useState(budgetHistory[budgetHistory.length - 1]?.month ?? "")
 
-  const selectedMonthData = budgetHistory.find((item) => item.month === selectedMonth) || budgetHistory[0]
+  const selectedMonthData = budgetHistory.find((item) => item.month === selectedMonth) ?? budgetHistory[0] ?? { month: "", label: "", totalBudget: 0, totalSpent: 0, categories: [] }
   const selectedMonthIndex = budgetHistory.findIndex((item) => item.month === selectedMonth)
 
   const handlePreviousMonth = () => {
     if (selectedMonthIndex > 0) {
-      setSelectedMonth(budgetHistory[selectedMonthIndex - 1].month)
+      setSelectedMonth(budgetHistory[selectedMonthIndex - 1]?.month ?? "")
     }
   }
 
   const handleNextMonth = () => {
     if (selectedMonthIndex < budgetHistory.length - 1) {
-      setSelectedMonth(budgetHistory[selectedMonthIndex + 1].month)
+      setSelectedMonth(budgetHistory[selectedMonthIndex + 1]?.month ?? "")
     }
   }
 

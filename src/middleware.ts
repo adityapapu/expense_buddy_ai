@@ -1,5 +1,6 @@
 import { getToken } from 'next-auth/jwt';
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { env } from "@/env";
 
 export async function middleware(req: NextRequest) {

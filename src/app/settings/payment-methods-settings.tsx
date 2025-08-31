@@ -137,7 +137,7 @@ export function PaymentMethodsSettings() {
                 <CreditCardIcon className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-medium">No Payment Methods</h3>
-              <p className="text-sm text-muted-foreground mt-1 mb-4">You haven't added any payment methods yet.</p>
+              <p className="text-sm text-muted-foreground mt-1 mb-4">You haven&apos;t added any payment methods yet.</p>
             </div>
           )}
         </CardContent>

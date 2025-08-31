@@ -54,7 +54,7 @@ export function TransactionsTable({
       }
 
       // Filter by date range
-      if (filters.dateRange?.from || filters.dateRange?.to) {
+      if (filters.dateRange) {
         const transactionDate = new Date(transaction.date);
         if (filters.dateRange.from && transactionDate < filters.dateRange.from)
           return false;
@@ -72,8 +72,10 @@ export function TransactionsTable({
 
       // Filter by amount range
       if (
-        Math.abs(transaction.amount) < filters.amountRange[0] ||
-        Math.abs(transaction.amount) > filters.amountRange[1]
+        filters.amountRange?.[0] !== undefined &&
+        filters.amountRange?.[1] !== undefined &&
+        (Math.abs(transaction.amount) < filters.amountRange[0] ||
+          Math.abs(transaction.amount) > filters.amountRange[1])
       ) {
         return false;
       }

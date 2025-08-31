@@ -100,11 +100,6 @@ export function BudgetsList() {
   const [activeTab, setActiveTab] = useState("all")
   const [editBudget, setEditBudget] = useState<(typeof budgets)[0] | null>(null)
 
-  const getBudgetStatusColor = (percentage: number) => {
-    if (percentage < 70) return "bg-green-500"
-    if (percentage < 90) return "bg-yellow-500"
-    return "bg-red-500"
-  }
 
   const getBudgetStatusIcon = (percentage: number) => {
     if (percentage >= 100) {
@@ -209,7 +204,6 @@ export function BudgetsList() {
                         <Progress
                           value={budget.percentageUsed}
                           className="h-2"
-                          indicatorClassName={getBudgetStatusColor(budget.percentageUsed)}
                         />
                         <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                           <span>

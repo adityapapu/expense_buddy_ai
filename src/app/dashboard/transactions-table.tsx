@@ -36,6 +36,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
+import {
+  CaretSortIcon,
+  ChevronDownIcon,
+  DotsHorizontalIcon,
+} from "@radix-ui/react-icons";
 
 // This would typically come from an API or database
 
@@ -149,9 +154,9 @@ export function TransactionsTable() {
         return (
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
-              <span className="text-xs">{category.charAt(0)}</span>
+              <span className="text-xs">{category?.charAt(0) ?? ""}</span>
             </div>
-            <span>{category}</span>
+            <span>{category ?? "Unknown"}</span>
           </div>
         );
       },
@@ -164,7 +169,7 @@ export function TransactionsTable() {
       accessorKey: "isSplit",
       header: "Split Status",
       cell: ({ row }) => {
-        const isSplit = row.getValue("isSplit") as boolean;
+        const isSplit = row.getValue("isSplit");
         return isSplit ? (
           <Badge variant="outline" className="flex items-center gap-1">
             <UsersIcon className="h-3 w-3" />

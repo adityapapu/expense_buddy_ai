@@ -17,18 +17,30 @@ import {
   ModalFooter,
   Chip,
   ScrollShadow,
-  Divider,
 } from "@heroui/react";
 import { useToast } from "@/hooks/use-toast";
 import { listFriendsAndRequests, sendFriendRequest, respondToFriendRequest, removeFriend } from "@/server/services/friendService";
+
+interface User {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+interface FriendRequest {
+  id: string;
+  sender: User;
+  receiver?: User;
+}
 
 export default function FriendsList() {
   const { toast } = useToast();
   const [friendEmail, setFriendEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [friends, setFriends] = useState<any[]>([]);
-  const [receivedRequests, setReceivedRequests] = useState<any[]>([]);
-  const [sentRequests, setSentRequests] = useState<any[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
 
   const {
     isOpen: isAddFriendOpen,
@@ -41,9 +53,9 @@ export default function FriendsList() {
     try {
       const response = await listFriendsAndRequests();
       if (response.success) {
-        setFriends(response.friends || []);
-        setReceivedRequests(response.pendingReceivedRequests || []);
-        setSentRequests(response.pendingSentRequests || []);
+        setFriends(response.friends ?? []);
+        setReceivedRequests((response.pendingReceivedRequests as unknown as FriendRequest[]) ?? []);
+        setSentRequests((response.pendingSentRequests as unknown as FriendRequest[]) ?? []);
       } else {
         toast({
           variant: "destructive",
@@ -61,7 +73,7 @@ export default function FriendsList() {
   }, [toast]);
 
   useEffect(() => {
-    loadFriendsAndRequests();
+    void loadFriendsAndRequests();
   }, [loadFriendsAndRequests]);
 
   const handleSendRequest = async () => {
@@ -99,14 +111,18 @@ export default function FriendsList() {
         toast({
           variant: "destructive",
           title: "Error",
-          description: response.message || "Failed to send friend request"
+          description: response.message ?? "Failed to send friend request"
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let message = "Failed to send friend request";
+      if (error instanceof Error) {
+        message = error.message;
+      }
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.message || "Failed to send friend request"
+        description: message,
       });
     } finally {
       setIsSubmitting(false);
@@ -125,7 +141,7 @@ export default function FriendsList() {
           title: "Success",
           description: accept ? "Friend request accepted" : "Friend request rejected"
         });
-        loadFriendsAndRequests();
+        await loadFriendsAndRequests();
       } else {
         toast({
           variant: "destructive",
@@ -150,7 +166,7 @@ export default function FriendsList() {
           title: "Success",
           description: "Friend removed successfully"
         });
-        loadFriendsAndRequests();
+        await loadFriendsAndRequests();
       } else {
         toast({
           variant: "destructive",
@@ -188,7 +204,7 @@ export default function FriendsList() {
                       className="flex items-center justify-between p-2 rounded-lg border border-default-200"
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar src={friend.image} name={friend.name} />
+                        <Avatar src={friend.image || undefined} name={friend.name || undefined} />
                         <div>
                           <p className="font-medium">{friend.name}</p>
                           <p className="text-small text-default-500">{friend.email}</p>
@@ -197,7 +213,7 @@ export default function FriendsList() {
                       <Button
                         color="danger"
                         variant="light"
-                        onPress={() => handleRemoveFriend(friend.id)}
+                        onPress={() => void handleRemoveFriend(friend.id)}
                       >
                         Remove
                       </Button>
@@ -205,7 +221,7 @@ export default function FriendsList() {
                   ))}
                   {friends.length === 0 && (
                     <p className="text-center text-default-500 py-4">
-                      You haven't added any friends yet
+                      You haven&apos;t added any friends yet
                     </p>
                   )}
                 </div>
@@ -236,7 +252,7 @@ export default function FriendsList() {
                           className="flex items-center justify-between p-2 rounded-lg border border-default-200"
                         >
                           <div className="flex items-center gap-3">
-                            <Avatar src={request.sender.image} name={request.sender.name} />
+                            <Avatar src={request.sender.image || undefined} name={request.sender.name || undefined} />
                             <div>
                               <p className="font-medium">{request.sender.name}</p>
                               <p className="text-small text-default-500">{request.sender.email}</p>
@@ -247,7 +263,7 @@ export default function FriendsList() {
                               color="success"
                               variant="flat"
                               size="sm"
-                              onPress={() => handleRespondToRequest(request.id, true)}
+                              onPress={() => void handleRespondToRequest(request.id, true)}
                             >
                               Accept
                             </Button>
@@ -255,7 +271,7 @@ export default function FriendsList() {
                               color="danger"
                               variant="light"
                               size="sm"
-                              onPress={() => handleRespondToRequest(request.id, false)}
+                              onPress={() => void handleRespondToRequest(request.id, false)}
                             >
                               Reject
                             </Button>
@@ -277,10 +293,10 @@ export default function FriendsList() {
                           className="flex items-center justify-between p-2 rounded-lg border border-default-200"
                         >
                           <div className="flex items-center gap-3">
-                            <Avatar src={request.receiver.image} name={request.receiver.name} />
+                            <Avatar src={request.receiver?.image || undefined} name={request.receiver?.name || undefined} />
                             <div>
-                              <p className="font-medium">{request.receiver.name}</p>
-                              <p className="text-small text-default-500">{request.receiver.email}</p>
+                              <p className="font-medium">{request.receiver?.name}</p>
+                              <p className="text-small text-default-500">{request.receiver?.email}</p>
                             </div>
                           </div>
                           <Chip size="sm" variant="flat" color="warning">
@@ -316,7 +332,7 @@ export default function FriendsList() {
               <ModalBody>
                 <div className="space-y-4">
                   <p className="text-small text-default-500">
-                    Enter your friend's email address to send them a friend request.
+                    Enter your friend&apos;s email address to send them a friend request.
                   </p>
                   <Input
                     type="email"

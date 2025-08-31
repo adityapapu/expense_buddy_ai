@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from 'react';
 import { Card, CardBody, Button, Alert } from '@heroui/react';
-import { QrCode, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { QrCode, ArrowLeft, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import QRScannerComponent from '@/components/scan/qr-scanner';
 import PaymentPreview from '@/components/scan/payment-preview';
-import { parseUPIData, UPIData } from '@/components/scan/upi-handler';
+import { parseUPIData, type UPIData } from '@/components/scan/upi-handler';
 import { createScanTransaction } from '@/server/services/transactionService';
 import { getCurrentUser } from '@/server/services/userService';
 import { generateTransactionSuggestion } from '@/server/services/aiService';
@@ -31,7 +31,7 @@ export default function ScanPage() {
       setIsScanning(false);
       toast({
         title: "QR Code Scanned Successfully",
-        description: `Ready to pay ${parsed.pn || 'merchant'}`,
+        description: `Ready to pay ${parsed.pn ?? 'merchant'}`,
       });
     } else {
       setScanError('Invalid QR code. Please scan a valid UPI payment QR code.');
@@ -65,13 +65,13 @@ export default function ScanPage() {
       }
 
       // Generate AI suggestion for the transaction
-      let description = `Payment to ${upiData.pn || 'Unknown Merchant'}`;
+      let description = `Payment to ${upiData.pn ?? 'Unknown Merchant'}`;
       let categoryId = '';
       
       try {
         const aiSuggestion = await generateTransactionSuggestion(
-          upiData.pn || 'Unknown Merchant',
-          upiData.pa || '',
+          upiData.pn ?? 'Unknown Merchant',
+          upiData.pa ?? '',
           amount
         );
         if (aiSuggestion.description) {
@@ -89,12 +89,12 @@ export default function ScanPage() {
         description,
         totalAmount: amount,
         date: new Date().toISOString(),
-        notes: upiData.tn || `UPI Payment to ${upiData.pa}`,
+        notes: upiData.tn ?? `UPI Payment to ${upiData.pa}`,
         participants: [{
           userId: user.id,
           amount: amount,
           type: 'EXPENSE' as const,
-          categoryId: categoryId || '', // Will be auto-filled by createScanTransaction
+          categoryId: categoryId ?? '', // Will be auto-filled by createScanTransaction
           paymentMethodId: '', // Will be auto-filled by createScanTransaction
           description: `UPI Payment via QR scan`,
           tagIds: []
@@ -119,7 +119,7 @@ export default function ScanPage() {
         }, 2000);
         
       } else {
-        throw new Error(response.message || 'Failed to create transaction');
+        throw new Error(response.message ?? 'Failed to create transaction');
       }
       
     } catch (error) {

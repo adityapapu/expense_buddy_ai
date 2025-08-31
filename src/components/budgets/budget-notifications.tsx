@@ -102,7 +102,6 @@ export function BudgetNotifications() {
                   <Progress
                     value={notification.percentageUsed}
                     className="h-1.5"
-                    indicatorClassName={notification.percentageUsed >= 100 ? "bg-red-500" : "bg-yellow-500"}
                   />
                 </div>
 
@@ -120,7 +119,7 @@ export function BudgetNotifications() {
             <BellOffIcon className="h-10 w-10 text-muted-foreground mb-3" />
             <h3 className="font-medium">No Budget Alerts</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              You're doing great! All your spending is within budget limits.
+              You&apos;re doing great! All your spending is within budget limits.
             </p>
           </div>
         )}

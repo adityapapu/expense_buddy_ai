@@ -1,11 +1,12 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js"
 import { Pie } from "react-chartjs-2"
 
 // Register Chart.js components
 Chart.register(ArcElement, Tooltip, Legend)
+
 
 interface CategoryData {
   category: string
@@ -19,7 +20,7 @@ interface CategoryPieChartProps {
 }
 
 export function CategoryPieChart({ data }: CategoryPieChartProps) {
-  const chartRef = useRef<Chart | null>(null)
+  // Chart ref removed as it was unused
   const [legendPosition, setLegendPosition] = useState<"right" | "bottom">("right")
 
   // Safely handle window resize with useEffect
@@ -68,8 +69,8 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
       tooltip: {
         callbacks: {
           label: (context: any) => {
-            const label = context.label || ""
-            const value = context.raw || 0
+            const label = context.label ?? ""
+            const value = context.raw ?? 0
             const percentage = ((value / data.reduce((sum, item) => sum + item.amount, 0)) * 100).toFixed(1)
             return `${label}: $${value.toFixed(2)} (${percentage}%)`
           },
@@ -80,7 +81,7 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
 
   return (
     <div className="h-full w-full">
-      <Pie data={chartData} options={options} />
+      <Pie data={chartData} options={options as any} />
     </div>
   )
 }

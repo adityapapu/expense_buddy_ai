@@ -11,7 +11,6 @@ import { ExportOptions } from "./export-options"
 import type { DateRange } from "react-day-picker"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useMediaQuery } from "@/hooks/use-media-query"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function ReportsPageContent() {
@@ -21,7 +20,7 @@ export function ReportsPageContent() {
   })
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedTab, setSelectedTab] = useState("overview")
-  const isMobile = useMediaQuery("(max-width: 768px)")
+  
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range)
@@ -49,7 +48,7 @@ export function ReportsPageContent() {
       />
 
       <Tabs defaultValue="overview" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <ScrollArea className="w-full" orientation="horizontal">
+        <ScrollArea className="w-full">
           <TabsList className="w-full md:w-auto justify-start md:justify-center p-0 h-auto">
             <TabsTrigger value="overview" className="px-4 py-2">
               Overview

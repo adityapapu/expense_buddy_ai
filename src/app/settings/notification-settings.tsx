@@ -12,16 +12,16 @@ import { Loader2Icon } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 const notificationFormSchema = z.object({
-  budgetAlerts: z.boolean().default(true),
-  paymentReminders: z.boolean().default(true),
-  billDueAlerts: z.boolean().default(true),
-  weeklyReports: z.boolean().default(true),
-  monthlyReports: z.boolean().default(true),
-  friendRequests: z.boolean().default(true),
-  splitExpenseRequests: z.boolean().default(true),
-  marketingEmails: z.boolean().default(false),
+  budgetAlerts: z.boolean(),
+  paymentReminders: z.boolean(),
+  billDueAlerts: z.boolean(),
+  weeklyReports: z.boolean(),
+  monthlyReports: z.boolean(),
+  friendRequests: z.boolean(),
+  splitExpenseRequests: z.boolean(),
+  marketingEmails: z.boolean(),
   notificationMethod: z.enum(["all", "email", "push", "none"], {
-    required_error: "You need to select a notification method.",
+    message: "You need to select a notification method.",
   }),
 })
 
@@ -126,7 +126,7 @@ export function NotificationSettings() {
                         <div className="space-y-0.5">
                           <FormLabel className="text-base">Budget Alerts</FormLabel>
                           <FormDescription>
-                            Receive alerts when you're approaching or exceeding budget limits.
+                            Receive alerts when you&apos;re approaching or exceeding budget limits.
                           </FormDescription>
                         </div>
                         <FormControl>

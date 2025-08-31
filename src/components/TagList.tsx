@@ -61,7 +61,7 @@ export default function TagList({ initialTags = [] }: TagListProps) {
         return {
           items: initialTags,
           cursor: initialTags.length >= ITEMS_PER_PAGE 
-            ? initialTags[initialTags.length - 1].id 
+            ? initialTags[initialTags.length - 1]?.id 
             : undefined,
         };
       }
@@ -81,7 +81,7 @@ export default function TagList({ initialTags = [] }: TagListProps) {
         setHasMore(hasNextPage);
         return {
           items: response.tags,
-          cursor: response.nextCursor || undefined,
+          cursor: response.nextCursor ?? undefined,
         };
       }
 
@@ -109,7 +109,7 @@ export default function TagList({ initialTags = [] }: TagListProps) {
       return;
     }
     list.reload();
-  }, [debouncedFilterValue]);
+  }, [debouncedFilterValue, list]);
 
   const [loaderRef, scrollerRef] = useInfiniteScroll({
     hasMore,
@@ -220,7 +220,7 @@ export default function TagList({ initialTags = [] }: TagListProps) {
         bottomContent={
           hasMore ? (
             <div className="flex w-full justify-center">
-              <Button ref={loaderRef} isLoading variant="flat">
+              <Button ref={loaderRef as any} isLoading variant="flat">
                 Load More
               </Button>
             </div>
@@ -269,13 +269,15 @@ export default function TagList({ initialTags = [] }: TagListProps) {
           />
 
           <ConfirmationModal
-            isOpen={isDeleteOpen}
-            onClose={onDeleteClose}
-            onConfirm={handleDelete}
-            title="Delete Tag"
-            body={`Are you sure you want to delete the tag "${selectedTag.name}"?`}
-            confirmText="Delete"
-            confirmColorScheme="danger"
+            {...{
+              isOpen: isDeleteOpen,
+              onClose: onDeleteClose,
+              onConfirm: handleDelete,
+              title: "Delete Tag",
+              body: `Are you sure you want to delete the tag "${selectedTag.name}"?`,
+              confirmText: "Delete",
+              confirmColorScheme: "danger"
+            } as any}
           />
         </>
       )}

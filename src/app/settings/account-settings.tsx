@@ -19,19 +19,19 @@ const accountFormSchema = z.object({
     message: "Username must be at least 2 characters.",
   }),
   language: z.string({
-    required_error: "Please select a language.",
+    message: "Please select a language.",
   }),
   currency: z.string({
-    required_error: "Please select a currency.",
+    message: "Please select a currency.",
   }),
   dateFormat: z.string({
-    required_error: "Please select a date format.",
+    message: "Please select a date format.",
   }),
   weekStart: z.string({
-    required_error: "Please select a week start day.",
+    message: "Please select a week start day.",
   }),
-  twoFactorAuth: z.boolean().default(false),
-  emailNotifications: z.boolean().default(true),
+  twoFactorAuth: z.boolean(),
+  emailNotifications: z.boolean(),
 })
 
 type AccountFormValues = z.infer<typeof accountFormSchema>

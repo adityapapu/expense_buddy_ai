@@ -1,4 +1,6 @@
-export const EditIcon = (props) => (
+import React from 'react';
+
+export const EditIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     aria-hidden="true"
     fill="none"

@@ -140,7 +140,7 @@ export function TransactionChart() {
   const [chartType, setChartType] = useState("pie")
 
   // Process transaction data to get category totals
-  const { categoryTotals, totalSpent, categoryData, percentageChange } = useMemo(() => {
+  const { totalSpent, categoryData, percentageChange } = useMemo(() => {
     // Group transactions by category and sum amounts
     const categoryMap = transactionData.reduce(
       (acc, transaction) => {
@@ -162,7 +162,7 @@ export function TransactionChart() {
       category,
       amount,
       percentage: (amount / total) * 100,
-      color: categoryColors[category] || categoryColors.Other,
+      color: categoryColors[category] ?? categoryColors.Other ?? "#C9C9C9",
     }))
 
     // Sort by amount (highest first)
@@ -172,7 +172,6 @@ export function TransactionChart() {
     const percentChange = ((total - previousMonthTotal) / previousMonthTotal) * 100
 
     return {
-      categoryTotals: categoryMap,
       totalSpent: total,
       categoryData: data,
       percentageChange: percentChange,

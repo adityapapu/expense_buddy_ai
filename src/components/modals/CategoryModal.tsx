@@ -126,10 +126,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               onChange={(e) => setCategoryType(e.target.value as TransactionType)}
               className="w-full"
             >
-              <SelectItem key={TransactionType.EXPENSE} value={TransactionType.EXPENSE}>
+              <SelectItem key={TransactionType.EXPENSE}>
                 Expense
               </SelectItem>
-              <SelectItem key={TransactionType.INCOME} value={TransactionType.INCOME}>
+              <SelectItem key={TransactionType.INCOME}>
                 Income
               </SelectItem>
             </Select>

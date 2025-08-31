@@ -26,6 +26,31 @@ import {
 } from "@/lib/actions/transactions"; // Assuming you move the interface there
 import { useToast } from "@/components/ui/use-toast";
 
+interface SummaryData {
+  income: {
+    total: number;
+    change: number;
+  };
+  expenses: {
+    total: number;
+    change: number;
+  };
+  balance: {
+    total: number;
+    change: number;
+  };
+}
+
+interface TransactionsPageContentProps {
+  transactions: Transaction[];
+  categories: { id: string; name: string }[];
+  paymentMethods: { id: string; name: string }[];
+  summary: {
+    success: boolean;
+    summary?: SummaryData;
+  };
+}
+
 const DEFAULT_FILTERS: FilterState = {
   dateRange: undefined,
   type: "all",
@@ -40,12 +65,7 @@ export function TransactionsPageContent({
   categories,
   paymentMethods,
   summary,
-}: {
-  transactions: Transaction[];
-  categories: { id: string; name: string }[];
-  paymentMethods: { id: string; name: string }[];
-  summary: any;
-}) {
+}: TransactionsPageContentProps) {
   const { data: session } = useSession();
   const [activeView, setActiveView] = useState<"all" | "income" | "expense">(
     "all",
@@ -78,7 +98,7 @@ export function TransactionsPageContent({
     setIsEditTransactionOpen(true);
   };
 
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const handleDelete = (transaction: Transaction) => {
     startTransition(async () => {

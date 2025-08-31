@@ -100,7 +100,7 @@ export function TransactionsFilters({
         <div className="space-y-2">
           <Label>Categories</Label>
           <MultiSelect
-            options={(categories || []).map((cat) => ({
+            options={(categories ?? []).map((cat) => ({
               label: cat.name,
               value: cat.id,
             }))}
@@ -113,7 +113,7 @@ export function TransactionsFilters({
         <div className="space-y-2">
           <Label>Payment Methods</Label>
           <MultiSelect
-            options={(paymentMethods || []).map((method) => ({
+            options={(paymentMethods ?? []).map((method) => ({
               label: method.name,
               value: method.id,
             }))}

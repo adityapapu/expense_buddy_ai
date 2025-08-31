@@ -30,8 +30,6 @@ import {
   type Transaction,
 } from "@/lib/actions/transactions";
 
-import { type Session } from "next-auth";
-
 interface TransactionFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,7 +37,7 @@ interface TransactionFormDialogProps {
   mode?: "create" | "edit";
   categories: { id: string; name: string }[];
   paymentMethods: { id: string; name: string }[];
-  session: Session | null;
+  session?: any;
 }
 
 export function TransactionFormDialog({
@@ -49,15 +47,15 @@ export function TransactionFormDialog({
   mode = "create",
   categories,
   paymentMethods,
-  session,
+  session: _session,
 }: TransactionFormDialogProps) {
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-  const [isSplit, setIsSplit] = useState(transaction?.isSplit || false);
+  const [, startTransition] = useTransition();
+  const [isSplit, setIsSplit] = useState(transaction?.isSplit ?? false);
   const [splitDetails, setSplitDetails] = useState(
-    transaction?.splitDetails || [],
+    transaction?.splitDetails ?? [],
   );
-  const [tags, setTags] = useState<string[]>(transaction?.tags || []);
+  const [tags, setTags] = useState<string[]>(transaction?.tags ?? []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +95,12 @@ export function TransactionFormDialog({
     value: string | number,
   ) => {
     const newSplitDetails = [...splitDetails];
-    newSplitDetails[index] = { ...newSplitDetails[index], [field]: value };
+    const currentDetail = newSplitDetails[index];
+    if (field === "with") {
+      newSplitDetails[index] = { with: value as string, amount: currentDetail?.amount ?? 0 };
+    } else {
+      newSplitDetails[index] = { with: currentDetail?.with ?? "", amount: value as number };
+    }
     setSplitDetails(newSplitDetails);
   };
 
@@ -118,7 +121,7 @@ export function TransactionFormDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Type</Label>
-              <Select name="type" defaultValue={transaction?.type || "expense"}>
+              <Select name="type" defaultValue={transaction?.type ?? "expense"}>
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -135,7 +138,7 @@ export function TransactionFormDialog({
                 name="date"
                 type="date"
                 defaultValue={
-                  transaction?.date || new Date().toISOString().split("T")[0]
+                  transaction?.date ?? new Date().toISOString().split("T")[0]
                 }
               />
             </div>
@@ -169,7 +172,7 @@ export function TransactionFormDialog({
               <Label htmlFor="category">Category</Label>
               <Select
                 name="category"
-                defaultValue={transaction?.category.id || ""}
+                defaultValue={transaction?.category.id ?? ""}
               >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select category" />
@@ -187,7 +190,7 @@ export function TransactionFormDialog({
               <Label htmlFor="paymentMethod">Payment Method</Label>
               <Select
                 name="paymentMethod"
-                defaultValue={transaction?.paymentMethod.id || ""}
+                defaultValue={transaction?.paymentMethod.id ?? ""}
               >
                 <SelectTrigger id="paymentMethod">
                   <SelectValue placeholder="Select method" />
@@ -207,7 +210,6 @@ export function TransactionFormDialog({
             <Label htmlFor="tags">Tags</Label>
             <TagInput
               id="tags"
-              name="tags"
               placeholder="Add tags..."
               tags={tags}
               setTags={setTags}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export interface UPIData {
   pa?: string;  // Payee address (UPI ID)
@@ -20,27 +20,27 @@ export function parseUPIData(qrData: string): UPIData | null {
       const params = url.searchParams;
       
       return {
-        pa: params.get('pa') || undefined,
-        pn: params.get('pn') || undefined, 
-        am: params.get('am') || undefined,
-        cu: params.get('cu') || 'INR',
-        tn: params.get('tn') || undefined,
-        tr: params.get('tr') || undefined,
-        mc: params.get('mc') || undefined,
-        url: params.get('url') || undefined,
+        pa: params.get('pa') ?? undefined,
+        pn: params.get('pn') ?? undefined, 
+        am: params.get('am') ?? undefined,
+        cu: params.get('cu') ?? 'INR',
+        tn: params.get('tn') ?? undefined,
+        tr: params.get('tr') ?? undefined,
+        mc: params.get('mc') ?? undefined,
+        url: params.get('url') ?? undefined,
       };
     }
     
     // Try to parse as JSON (some QR codes contain JSON)
     if (qrData.startsWith('{')) {
-      const parsed = JSON.parse(qrData);
-      if (parsed.pa || parsed.upi) {
+      const parsed = JSON.parse(qrData) as { pa?: string; upi?: string; pn?: string; name?: string; am?: string; amount?: string; cu?: string; tn?: string; note?: string };
+      if (parsed.pa ?? parsed.upi) {
         return {
-          pa: parsed.pa || parsed.upi,
-          pn: parsed.pn || parsed.name,
-          am: parsed.am || parsed.amount,
-          cu: parsed.cu || 'INR',
-          tn: parsed.tn || parsed.note,
+          pa: parsed.pa ?? parsed.upi,
+          pn: parsed.pn ?? parsed.name,
+          am: parsed.am ?? parsed.amount,
+          cu: parsed.cu ?? 'INR',
+          tn: parsed.tn ?? parsed.note,
         };
       }
     }
@@ -62,7 +62,7 @@ export function generateUPIURL(upiData: UPIData, amount?: number): string {
   } else if (upiData.am) {
     params.set('am', upiData.am);
   }
-  params.set('cu', upiData.cu || 'INR');
+  params.set('cu', upiData.cu ?? 'INR');
   if (upiData.tn) params.set('tn', upiData.tn);
   if (upiData.tr) params.set('tr', upiData.tr);
   if (upiData.mc) params.set('mc', upiData.mc);

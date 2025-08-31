@@ -1,19 +1,19 @@
 "use client"
 
-import type { DateRange } from "react-day-picker"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts"
 import { formatCurrency } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type { DateRange } from "react-day-picker"
 
 interface CategoryBreakdownProps {
-  dateRange: DateRange | undefined
   selectedCategories: string[]
   detailed?: boolean
+  dateRange?: DateRange
 }
 
-export function CategoryBreakdown({ dateRange, selectedCategories, detailed = false }: CategoryBreakdownProps) {
+export function CategoryBreakdown({ selectedCategories, detailed = false, dateRange: _dateRange }: CategoryBreakdownProps) {
   // In a real app, you would fetch this data based on the date range and selected categories
   // This is mock data for demonstration
   const categoryData = [

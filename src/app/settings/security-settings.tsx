@@ -30,9 +30,9 @@ const passwordFormSchema = z
   })
 
 const securityFormSchema = z.object({
-  twoFactorAuth: z.boolean().default(false),
-  loginNotifications: z.boolean().default(true),
-  sessionTimeout: z.boolean().default(false),
+  twoFactorAuth: z.boolean(),
+  loginNotifications: z.boolean(),
+  sessionTimeout: z.boolean(),
 })
 
 type PasswordFormValues = z.infer<typeof passwordFormSchema>
@@ -180,7 +180,7 @@ export function SecuritySettings() {
                 {securityForm.watch("twoFactorAuth") && (
                   <div className="ml-6 pl-6 border-l">
                     <p className="text-sm text-muted-foreground mb-4">
-                      Two-factor authentication is enabled. You'll need to enter a verification code when you sign in.
+                      Two-factor authentication is enabled. You&apos;ll need to enter a verification code when you sign in.
                     </p>
                     <Button variant="outline" size="sm">
                       Configure 2FA

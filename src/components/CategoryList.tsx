@@ -14,7 +14,8 @@ import {
   getKeyValue,
   Input,
   Button,
-  Chip
+  Chip,
+  type Selection
 } from "@heroui/react";
 import { EditIcon, DeleteIcon } from "./icons";
 import CategoryModal from "./modals/CategoryModal";
@@ -49,7 +50,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedKeys, setSelectedKeys] = useState<Set<React.Key>>(new Set());
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
   const { toast } = useToast();
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [filterValue, setFilterValue] = useState("");
@@ -65,7 +66,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
         return {
           items: initialCategories,
           cursor: initialCategories.length >= ITEMS_PER_PAGE 
-            ? initialCategories[initialCategories.length - 1].id 
+            ? initialCategories[initialCategories.length - 1]?.id 
             : undefined,
         };
       }
@@ -110,7 +111,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
       return;
     }
     list.reload();
-  }, [debouncedFilterValue, typeFilter]);
+  }, [debouncedFilterValue, typeFilter, list]);
 
   const [loaderRef, scrollerRef] = useInfiniteScroll({
     hasMore,
@@ -151,8 +152,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedKeys.size === 0) return;
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedKeys === "all" || selectedKeys.size === 0) return;
     try {
       const selectedIds = Array.from(selectedKeys);
       await Promise.all(selectedIds.map(async (id) => {
@@ -176,7 +177,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
         description: error instanceof Error ? error.message : "Failed to delete the categories. Please try again later.",
       });
     }
-  };
+  }, [list, selectedKeys, toast]);
 
   const handleSave = (updatedCategory: Category) => {
     list.update(updatedCategory.id, updatedCategory);
@@ -272,12 +273,12 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
           </Button>
         </div>
         <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
-          {selectedKeys.size > 0 && (
+          {selectedKeys !== "all" && selectedKeys.size > 0 && (
             <Button color="danger" onPress={handleBulkDelete} size="sm">
               Delete Selected ({selectedKeys.size})
             </Button>
           )}
-          <Button color="primary" onPress={onAddOpen} className={selectedKeys.size > 0 ? "ml-auto sm:ml-2" : "ml-auto sm:ml-0"}>
+          <Button color="primary" onPress={onAddOpen} className={selectedKeys !== "all" && selectedKeys.size > 0 ? "ml-auto sm:ml-2" : "ml-auto sm:ml-0"}>
             Add New
           </Button>
         </div>
@@ -285,7 +286,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
     </div>
   ), [filterValue, onSearchChange, onTypeFilterChange, typeFilter, onAddOpen, handleBulkDelete, selectedKeys]);
 
-  const onSelectionChange = useCallback((keys: "all" | Set<React.Key>) => {
+  const onSelectionChange = useCallback((keys: Selection) => {
     if (keys === "all") {
       setSelectedKeys(new Set(list.items.map((item) => item.id)));
     } else {
@@ -311,11 +312,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ initialCategories = [] }) =
           tr: "h-12",
           wrapper: "overflow-x-auto", // Allow horizontal scrolling on small screens
         }}
-        layout={{
-          // Adjust column widths for better mobile display
-          xs: "fixed",
-          sm: "auto",
-        }}
+        layout="fixed"
         bottomContent={hasMore && !list.isLoading ? (
           <div className="flex w-full justify-center">
             <Spinner ref={loaderRef} color="white" size="sm" />

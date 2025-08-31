@@ -39,16 +39,16 @@ const categories = [
 
 const formSchema = z.object({
   categoryId: z.string({
-    required_error: "Please select a category.",
+    message: "Please select a category.",
   }),
-  amount: z.coerce.number().positive({
+  amount: z.number().positive({
     message: "Amount must be a positive number.",
   }),
   startDate: z.date({
-    required_error: "Start date is required.",
+    message: "Start date is required.",
   }),
   endDate: z.date({
-    required_error: "End date is required.",
+    message: "End date is required.",
   }),
   icon: z.string().optional(),
 })
@@ -62,9 +62,10 @@ interface BudgetFormDialogProps {
 export function BudgetFormDialog({ open, onOpenChange, defaultValues }: BudgetFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  type FormData = z.infer<typeof formSchema>
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues || {
+    defaultValues: defaultValues ?? {
       categoryId: "",
       amount: 0,
       startDate: new Date(),

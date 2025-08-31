@@ -179,9 +179,9 @@ export function UpcomingPaymentsTable({ filter = "upcoming" }: UpcomingPaymentsT
         return (
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-xs">{category.charAt(0)}</span>
+              <span className="text-xs">{category?.charAt(0) ?? ""}</span>
             </div>
-            <span>{category}</span>
+            <span>{category ?? "Unknown"}</span>
           </div>
         )
       },
@@ -190,7 +190,7 @@ export function UpcomingPaymentsTable({ filter = "upcoming" }: UpcomingPaymentsT
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string
+        const status = row.getValue("status")
         return status === "upcoming" ? (
           <Badge variant="outline" className="flex items-center gap-1 bg-yellow-50 text-yellow-700 border-yellow-200">
             <Clock className="h-3 w-3" />
@@ -243,9 +243,7 @@ export function UpcomingPaymentsTable({ filter = "upcoming" }: UpcomingPaymentsT
     {
       id: "actions",
       enableHiding: false,
-      cell: ({ row }) => {
-        const payment = row.original
-
+      cell: ({ row: _row }) => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

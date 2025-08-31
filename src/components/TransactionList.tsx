@@ -12,10 +12,6 @@ import {
   Input,
   Button,
   useDisclosure,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Chip,
   Tooltip,
   Card,
@@ -39,18 +35,23 @@ type TransactionSummary = {
   balance: number;
 };
 
+import { type Transaction, type TransactionParticipant, type Category } from "@prisma/client";
+
+interface TransactionWithParticipants extends Transaction {
+  participants: (TransactionParticipant & { category: Category })[];
+}
+
 interface TransactionListProps {
-  initialTransactions?: any[];
+  initialTransactions?: Transaction[];
 }
 
 export default function TransactionList({ initialTransactions = [] }: TransactionListProps) {
   const { toast } = useToast();
   const [filterValue, setFilterValue] = useState("");
-  const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [viewMode, setViewMode] = useState<"view" | "edit" | null>(null);
   const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
-  const [dateRange, setDateRange] = useState<{ startDate?: Date; endDate?: Date }>({});
   const [summary, setSummary] = useState<TransactionSummary>({
     totalIncome: 0,
     totalExpense: 0,
@@ -76,44 +77,28 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
     setFilterValue(value);
   }, []);
 
-  // Build filters object for API call
-  const getFilters = useCallback(() => {
-    const filters: any = {};
-    
-    if (debouncedFilterValue) {
-      filters.searchTerm = debouncedFilterValue;
-    }
-    
-    if (typeFilter !== "ALL") {
-      filters.type = typeFilter;
-    }
-    
-    if (dateRange.startDate) {
-      filters.startDate = dateRange.startDate;
-    }
-    
-    if (dateRange.endDate) {
-      filters.endDate = dateRange.endDate;
-    }
-    
-    return filters;
-  }, [debouncedFilterValue, typeFilter, dateRange]);
-
   const load = useCallback(async ({ cursor }: { cursor?: string }) => {
     try {
       // For initial load, use the provided data if available and no filters are applied
       if (!cursor && initialTransactions.length > 0 && !debouncedFilterValue && 
-          typeFilter === "ALL" && !dateRange.startDate && !dateRange.endDate) {
+          typeFilter === "ALL") {
         setHasMore(initialTransactions.length >= ITEMS_PER_PAGE);
         return {
           items: initialTransactions,
           cursor: initialTransactions.length >= ITEMS_PER_PAGE 
-            ? initialTransactions[initialTransactions.length - 1].id 
+            ? initialTransactions[initialTransactions.length - 1]?.id 
             : undefined,
         };
       }
 
-      const filters = getFilters();
+      const filters: { searchTerm?: string, type?: TransactionType } = {};
+      if (debouncedFilterValue) {
+        filters.searchTerm = debouncedFilterValue;
+      }
+      if (typeFilter !== "ALL") {
+        filters.type = typeFilter;
+      }
+
       const response = await listTransactions({
         cursor,
         pageSize: ITEMS_PER_PAGE,
@@ -133,7 +118,7 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
         
         return {
           items: response.transactions,
-          cursor: response.nextCursor || undefined,
+          cursor: response.nextCursor ?? undefined,
         };
       }
 
@@ -151,9 +136,9 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
       });
       return { items: [] };
     }
-  }, [debouncedFilterValue, toast, initialTransactions, typeFilter, dateRange, getFilters]);
+  }, [debouncedFilterValue, toast, initialTransactions, typeFilter]);
 
-  const list = useAsyncList<any>({ load });
+  const list = useAsyncList<Transaction>({ load });
 
   useEffect(() => {
     if (initialLoadRef.current) {
@@ -161,26 +146,26 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
       return;
     }
     list.reload();
-  }, [debouncedFilterValue, typeFilter, dateRange]);
+  }, [debouncedFilterValue, typeFilter, list]);
 
   const [loaderRef, scrollerRef] = useInfiniteScroll({
     hasMore,
     onLoadMore: () => list.loadMore(),
   });
 
-  const handleView = useCallback((transaction: any) => {
+  const handleView = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setViewMode("view");
     onTransactionModalOpen();
   }, [onTransactionModalOpen]);
 
-  const handleEdit = useCallback((transaction: any) => {
+  const handleEdit = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setViewMode("edit");
     onTransactionModalOpen();
   }, [onTransactionModalOpen]);
 
-  const handleDeleteConfirmation = useCallback((transaction: any) => {
+  const handleDeleteConfirmation = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     onDeleteOpen();
   }, [onDeleteOpen]);
@@ -200,7 +185,7 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
         toast({
           variant: "destructive",
           title: "Error",
-          description: response.message || "Failed to delete transaction.",
+          description: response.message ?? "Failed to delete transaction.",
         });
       }
     } catch (error) {
@@ -305,17 +290,19 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
     </>
   ), [filterValue, onSearchChange, handleTransactionCreated, typeFilter, onTypeFilterChange, summarySection]);
 
-  const renderCell = useCallback((transaction: any, columnKey: string) => {
+  const renderCell = useCallback((transaction: Transaction, columnKey: string) => {
+    const transactionWithParticipants = transaction as TransactionWithParticipants;
+    
     switch (columnKey) {
       case "date":
-        return <div>{format(new Date(transaction.date), 'MMM d, yyyy')}</div>;
+        return <div>{format(new Date(transactionWithParticipants.date), 'MMM d, yyyy')}</div>;
       
       case "description":
-        return <div className="font-medium">{transaction.description}</div>;
+        return <div className="font-medium">{transactionWithParticipants.description}</div>;
       
       case "amount": {
-        const totalAmount = parseFloat(transaction.totalAmount.toString());
-        const isExpense = transaction.participants.some((p: any) => p.type === TransactionType.EXPENSE);
+        const totalAmount = parseFloat(transactionWithParticipants.totalAmount.toString());
+        const isExpense = transactionWithParticipants.participants?.some((p: TransactionParticipant) => p.type === TransactionType.EXPENSE) ?? false;
         return (
           <div className={isExpense ? 'text-danger' : 'text-success'}>
             {isExpense ? '- ' : '+ '}
@@ -325,7 +312,8 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
       }
       
       case "categories": {
-        const categories = [...new Set(transaction.participants.map((p: any) => p.category.name))];
+        const participants = transactionWithParticipants.participants ?? [];
+        const categories = [...new Set(participants.map((p: TransactionParticipant & { category: Category }) => p.category?.name ?? 'Unknown'))];
         return (
           <div className="flex flex-wrap gap-1">
             {categories.slice(0, 2).map((cat, i) => (
@@ -343,13 +331,13 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
       case "actions":
         return (
           <div className="flex items-center gap-2 justify-end">
-            <Button isIconOnly size="sm" variant="light" onPress={() => handleView(transaction)}>
+            <Button isIconOnly size="sm" variant="light" onPress={() => handleView(transactionWithParticipants)}>
               <EyeIcon />
             </Button>
-            <Button isIconOnly size="sm" variant="light" onPress={() => handleEdit(transaction)}>
+            <Button isIconOnly size="sm" variant="light" onPress={() => handleEdit(transactionWithParticipants)}>
               <EditIcon />
             </Button>
-            <Button isIconOnly size="sm" variant="light" onPress={() => handleDeleteConfirmation(transaction)}>
+            <Button isIconOnly size="sm" variant="light" onPress={() => handleDeleteConfirmation(transactionWithParticipants)}>
               <DeleteIcon />
             </Button>
           </div>
@@ -367,7 +355,7 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
         bottomContent={
           hasMore ? (
             <div className="flex w-full justify-center">
-              <Button ref={loaderRef} isLoading variant="flat">
+              <Button ref={loaderRef as any} isLoading variant="flat">
                 Load More
               </Button>
             </div>
@@ -409,7 +397,7 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
         <>
           {/* Transaction View/Edit Modal */}
           <TransactionModal 
-            transaction={selectedTransaction} 
+            transaction={selectedTransaction as any} 
             isOpen={isTransactionModalOpen} 
             onClose={onTransactionModalClose}
             onTransactionUpdated={handleTransactionUpdated}
@@ -418,13 +406,15 @@ export default function TransactionList({ initialTransactions = [] }: Transactio
 
           {/* Delete Confirmation Modal */}
           <ConfirmationModal
-            isOpen={isDeleteOpen}
-            onClose={onDeleteClose}
-            onConfirm={handleDelete}
-            title="Delete Transaction"
-            body={`Are you sure you want to delete the transaction "${selectedTransaction.description}"?`}
-            confirmText="Delete"
-            confirmColorScheme="danger"
+            {...{
+              isOpen: isDeleteOpen,
+              onClose: onDeleteClose,
+              onConfirm: handleDelete,
+              title: "Delete Transaction",
+              body: `Are you sure you want to delete the transaction "${selectedTransaction.description}"?`,
+              confirmText: "Delete",
+              confirmColorScheme: "danger"
+            } as any}
           />
         </>
       )}

@@ -7,12 +7,12 @@ import { FcGoogle } from 'react-icons/fc';
 import { Card, CardBody, CardHeader } from "@heroui/react";
 
 const Page = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      signIn("google", { callbackUrl: "/" });
+      void signIn("google", { callbackUrl: "/" });
     } else if (status === 'authenticated') {
       router.push('/');
     }

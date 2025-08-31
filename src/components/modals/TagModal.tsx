@@ -85,7 +85,7 @@ export default function TagModal({
         response = await updateTag({
           id: tag.id,
           name,
-          color: color || undefined
+          color: color ?? undefined
         });
         
         if (response.success) {
@@ -100,7 +100,7 @@ export default function TagModal({
         // Create new tag
         response = await createTag({
           name,
-          color: color || undefined
+          color: color ?? undefined
         });
         
         if (response.success) {
@@ -118,7 +118,7 @@ export default function TagModal({
         toast({
           variant: "destructive",
           title: "Error",
-          description: response.message || "An error occurred."
+          description: response.message ?? "An error occurred."
         });
       }
     } catch (error) {
@@ -153,7 +153,7 @@ export default function TagModal({
         backdrop="blur"
       >
         <ModalContent>
-          {(onClose) => (
+          {(_onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
                 {tag ? "Edit Tag" : "Create New Tag"}
@@ -172,7 +172,7 @@ export default function TagModal({
                 <div className="mt-4">
                   <p className="text-small mb-2">Tag Color</p>
                   <TwitterPicker 
-                    color={color || '#4285F4'}
+                    color={color ?? '#4285F4'}
                     onChange={(color) => setColor(color.hex)}
                     triangle="hide"
                     width="100%"

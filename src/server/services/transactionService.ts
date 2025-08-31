@@ -276,6 +276,7 @@ export const createTransaction = async (
             transactionId: newTransaction.id,
             userId: participant.userId,
             amount: participantAmount,
+            splitAmount: participantAmount, // Add required splitAmount field
             type: participant.type,
             categoryId: participant.categoryId,
             paymentMethodId: participant.paymentMethodId,
@@ -395,14 +396,16 @@ export const updateTransaction = async (
       );
       const updatedParticipantIds = data.participants
         .filter((p) => p.id)
-        .map((p) => p.id as string);
+        .map((p) => p.id!);
 
       // Delete participants that are no longer present
       if (existingParticipantIds.length > 0) {
         await prisma.transactionParticipant.deleteMany({
           where: {
-            id: { in: existingParticipantIds },
-            id: { notIn: updatedParticipantIds },
+            id: { 
+              in: existingParticipantIds,
+              notIn: updatedParticipantIds 
+            },
           },
         });
       }
@@ -470,7 +473,7 @@ export const updateTransaction = async (
               paymentMethodId: participant.paymentMethodId,
               description: participant.description?.trim(),
               tags: {
-                set: participant.tagIds?.map((id) => ({ id })) || [],
+                set: participant.tagIds?.map((id) => ({ id })) ?? [],
               },
             },
           });
@@ -481,6 +484,7 @@ export const updateTransaction = async (
               transactionId: data.id,
               userId: participant.userId,
               amount: participantAmount,
+              splitAmount: participantAmount, // Add required splitAmount field
               type: participant.type,
               categoryId: participant.categoryId,
               paymentMethodId: participant.paymentMethodId,
@@ -617,10 +621,10 @@ export const listTransactions = async (
 
     // Apply date filters
     if (filters.startDate) {
-      whereClause.date = { ...whereClause.date, gte: filters.startDate };
+      whereClause.date = { ...(whereClause.date as any || {}), gte: filters.startDate };
     }
     if (filters.endDate) {
-      whereClause.date = { ...whereClause.date, lte: filters.endDate };
+      whereClause.date = { ...(whereClause.date as any || {}), lte: filters.endDate };
     }
 
     // Apply search term filter
@@ -634,22 +638,22 @@ export const listTransactions = async (
     // Apply amount range filters
     if (filters.minAmount !== undefined) {
       whereClause.totalAmount = {
-        ...whereClause.totalAmount,
+        ...(whereClause.totalAmount as any || {}),
         gte: filters.minAmount,
       };
     }
     if (filters.maxAmount !== undefined) {
       whereClause.totalAmount = {
-        ...whereClause.totalAmount,
+        ...(whereClause.totalAmount as any || {}),
         lte: filters.maxAmount,
       };
     }
 
     // Apply more complex filters (category, payment method, tags, type)
     if (
-      filters.type ||
-      filters.categoryId ||
-      filters.paymentMethodId ||
+      filters.type ??
+      filters.categoryId ??
+      filters.paymentMethodId ??
       filters.tagIds?.length
     ) {
       whereClause.participants = {

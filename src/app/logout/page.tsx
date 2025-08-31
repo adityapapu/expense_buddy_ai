@@ -20,7 +20,7 @@ const LogoutPage = () => {
             </div>
           </CardHeader>
           <CardBody className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-2">You've been logged out</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">You&apos;ve been logged out</h1>
             <p className="text-foreground/80 mb-6">
               Thank you for using Expense Buddy AI.
             </p>

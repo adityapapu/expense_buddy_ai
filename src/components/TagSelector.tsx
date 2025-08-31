@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Tag as TagType } from '@prisma/client';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import type { Tag as TagType } from '@prisma/client';
 import { TagInput } from 'emblor';
 import { useToast } from "@/hooks/use-toast";
 import useDebounce from "@/hooks/useDebounce";
@@ -37,7 +37,7 @@ const TagSelector = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [suggestedTags, setSuggestedTags] = useState<TagType[]>([]);
-  const initialLoadRef = useRef(true);
+  
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Load tags from DB for autocomplete
@@ -62,7 +62,7 @@ const TagSelector = ({
         toast({
           variant: "destructive",
           title: "Error",
-          description: response.message || "Failed to load tags",
+          description: response.message ?? "Failed to load tags",
         });
       }
     } catch (error) {
@@ -77,7 +77,7 @@ const TagSelector = ({
   }, [debouncedSearchTerm, toast]);
 
   useEffect(() => {
-    loadTags();
+    void loadTags();
   }, [loadTags]);
 
   // Initialize with selected tags
@@ -85,7 +85,7 @@ const TagSelector = ({
     if (selectedTags.length > 0) {
       setEmblorTags(selectedTags.map(mapPrismaTagToEmblorTag));
     }
-  }, []);
+  }, [selectedTags]);
 
   // Handle tag creation
   const handleCreateTag = async (tagText: string) => {
@@ -98,7 +98,7 @@ const TagSelector = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: response.message || "Failed to create tag",
+        description: response.message ?? "Failed to create tag",
       });
       return null;
     } catch (error) {
@@ -126,7 +126,7 @@ const TagSelector = ({
         id: tag.id,
         name: tag.text,
         userId: '', // This will be filled by the server
-        color: tag.color || null,
+        color: tag.color ?? null,
         icon: null,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -144,7 +144,7 @@ const TagSelector = ({
   return (
     <TagInput
       tags={emblorTags}
-      setTags={handleTagsChange}
+      setTags={handleTagsChange as any}
       maxTags={maxTags}
       placeholder={placeholder}
       onInputChange={handleInputChange}
