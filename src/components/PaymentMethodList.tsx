@@ -99,7 +99,7 @@ const PaymentMethodList: React.FC<PaymentMethodListProps> = ({ initialPaymentMet
       return;
     }
     list.reload();
-  }, [debouncedFilterValue, list]);
+  }, [debouncedFilterValue]);
 
   const [loaderRef, scrollerRef] = useInfiniteScroll({
     hasMore,
