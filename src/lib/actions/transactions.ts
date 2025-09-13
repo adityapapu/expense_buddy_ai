@@ -96,24 +96,25 @@ export async function createTransaction(formData: FormData) {
     date: formData.get("date") as string,
     notes: formData.get("notes") as string,
     type: formData.get("type") as string,
-    category: formData.get("category") as string,
+    category: formData.get("category") as string || "",
     paymentMethod: formData.get("paymentMethod") as string,
   };
 
   console.log("rawFormData:", rawFormData);
 
-  if (
-    !rawFormData.amount ||
-    !rawFormData.date ||
-    !rawFormData.description ||
-    !rawFormData.type ||
-    !rawFormData.category ||
-    !rawFormData.paymentMethod
-  ) {
-    throw new Error("Missing required fields");
+  const missingFields = [];
+  if (!rawFormData.amount) missingFields.push("amount");
+  if (!rawFormData.date) missingFields.push("date");
+  if (!rawFormData.description?.trim()) missingFields.push("description");
+  if (!rawFormData.type) missingFields.push("type");
+  if (!rawFormData.category?.trim()) missingFields.push("category");
+  if (!rawFormData.paymentMethod) missingFields.push("paymentMethod");
+
+  if (missingFields.length > 0) {
+    throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
   }
 
-  const newTransaction = await db.transaction.create({
+  await db.transaction.create({
     data: {
       creatorId: session.user.id,
       description: rawFormData.description as string,
@@ -153,24 +154,25 @@ export async function updateTransaction(
     date: formData.get("date") as string,
     notes: formData.get("notes") as string,
     type: formData.get("type") as string,
-    category: formData.get("category") as string,
+    category: formData.get("category") as string || "",
     paymentMethod: formData.get("paymentMethod") as string,
   };
 
   console.log("rawFormData:", rawFormData);
 
-  if (
-    !rawFormData.amount ||
-    !rawFormData.date ||
-    !rawFormData.description ||
-    !rawFormData.type ||
-    !rawFormData.category ||
-    !rawFormData.paymentMethod
-  ) {
-    throw new Error("Missing required fields");
+  const missingFields = [];
+  if (!rawFormData.amount) missingFields.push("amount");
+  if (!rawFormData.date) missingFields.push("date");
+  if (!rawFormData.description?.trim()) missingFields.push("description");
+  if (!rawFormData.type) missingFields.push("type");
+  if (!rawFormData.category?.trim()) missingFields.push("category");
+  if (!rawFormData.paymentMethod) missingFields.push("paymentMethod");
+
+  if (missingFields.length > 0) {
+    throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
   }
 
-  const updatedTransaction = await db.transaction.update({
+  await db.transaction.update({
     where: { id: transactionId },
     data: {
       description: rawFormData.description as string,

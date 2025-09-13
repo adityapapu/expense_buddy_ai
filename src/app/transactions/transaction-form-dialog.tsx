@@ -61,21 +61,54 @@ export function TransactionFormDialog({
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
 
+    // Client-side validation
+    const description = formData.get("description") as string;
+    const amount = formData.get("amount") as string;
+    const date = formData.get("date") as string;
+    const type = formData.get("type") as string;
+    const category = formData.get("category") as string;
+    const paymentMethod = formData.get("paymentMethod") as string;
+
+    const missingFields = [];
+    if (!amount) missingFields.push("Amount");
+    if (!date) missingFields.push("Date");
+    if (!description?.trim()) missingFields.push("Description");
+    if (!type) missingFields.push("Type");
+    if (!category?.trim()) missingFields.push("Category");
+    if (!paymentMethod) missingFields.push("Payment Method");
+
+    if (missingFields.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: `Please fill in the following required fields: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     startTransition(async () => {
-      if (mode === "create") {
-        await createTransaction(formData);
+      try {
+        if (mode === "create") {
+          await createTransaction(formData);
+          toast({
+            title: "Transaction created",
+            description: "Your transaction has been saved successfully.",
+          });
+        } else if (transaction) {
+          await updateTransaction(transaction.id, formData);
+          toast({
+            title: "Transaction updated",
+            description: "Your transaction has been saved successfully.",
+          });
+        }
+        onOpenChange(false);
+      } catch (error) {
         toast({
-          title: "Transaction created",
-          description: "Your transaction has been saved successfully.",
-        });
-      } else if (transaction) {
-        await updateTransaction(transaction.id, formData);
-        toast({
-          title: "Transaction updated",
-          description: "Your transaction has been saved successfully.",
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to save transaction",
+          variant: "destructive",
         });
       }
-      onOpenChange(false);
     });
   };
 
@@ -169,28 +202,36 @@ export function TransactionFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Category *</Label>
               <Select
                 name="category"
                 defaultValue={transaction?.category.id ?? ""}
+                required
               >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No categories available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <Label htmlFor="paymentMethod">Payment Method *</Label>
               <Select
                 name="paymentMethod"
                 defaultValue={transaction?.paymentMethod.id ?? ""}
+                required
               >
                 <SelectTrigger id="paymentMethod">
                   <SelectValue placeholder="Select method" />
