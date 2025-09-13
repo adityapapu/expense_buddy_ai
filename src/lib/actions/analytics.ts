@@ -69,6 +69,7 @@ async function getAuthenticatedUser() {
   return session.user;
 }
 
+
 // Get user categories for filtering
 export async function getUserCategories(): Promise<CategoryData[]> {
   const user = await getAuthenticatedUser();
@@ -144,7 +145,96 @@ export async function getExpenseSummary(dateRange?: DateRange): Promise<ExpenseS
   const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
   // Calculate monthly change (comparing to previous period)
-  const monthlyChange = 0; // TODO: Implement previous period comparison
+  let monthlyChange = 0;
+  
+  if (dateRange?.from && dateRange?.to) {
+    // Calculate previous period of same duration
+    const periodDuration = dateRange.to.getTime() - dateRange.from.getTime();
+    const previousPeriodEnd = new Date(dateRange.from.getTime() - 1);
+    const previousPeriodStart = new Date(previousPeriodEnd.getTime() - periodDuration + 1);
+    
+    // Get previous period expenses
+    const previousPeriodExpenses = await db.transactionParticipant.aggregate({
+      where: {
+        userId: user.id,
+        type: "EXPENSE",
+        transaction: {
+          isDeleted: false,
+          date: {
+            gte: previousPeriodStart,
+            lte: previousPeriodEnd,
+          },
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+    
+    const previousExpenses = previousPeriodExpenses._sum.amount?.toNumber() || 0;
+    
+    // Calculate percentage change
+    if (previousExpenses > 0) {
+      monthlyChange = ((totalExpenses - previousExpenses) / previousExpenses) * 100;
+    } else if (totalExpenses > 0) {
+      // If previous period had no expenses but current period does, show as +100%
+      monthlyChange = 100;
+    }
+    // If both periods have no expenses, change remains 0
+  } else {
+    // If no date range specified, compare current month with previous month
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    // Get previous month expenses
+    const previousMonthExpenses = await db.transactionParticipant.aggregate({
+      where: {
+        userId: user.id,
+        type: "EXPENSE",
+        transaction: {
+          isDeleted: false,
+          date: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+    
+    const previousExpenses = previousMonthExpenses._sum.amount?.toNumber() || 0;
+    
+    // Get current month expenses
+    const currentMonthExpenses = await db.transactionParticipant.aggregate({
+      where: {
+        userId: user.id,
+        type: "EXPENSE",
+        transaction: {
+          isDeleted: false,
+          date: {
+            gte: currentMonthStart,
+            lte: now,
+          },
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+    
+    const currentExpenses = currentMonthExpenses._sum.amount?.toNumber() || 0;
+    
+    // Calculate percentage change
+    if (previousExpenses > 0) {
+      monthlyChange = ((currentExpenses - previousExpenses) / previousExpenses) * 100;
+    } else if (currentExpenses > 0) {
+      monthlyChange = 100;
+    }
+  }
 
   // Get largest expense
   const largestExpenseResult = await db.transactionParticipant.findFirst({
@@ -371,9 +461,9 @@ export async function getFilteredTransactions(
   dateRange?: DateRange,
   selectedCategories?: string[],
   searchTerm?: string,
-  sortBy: string = "date-desc",
-  limit: number = 50,
-  offset: number = 0
+  sortBy = "date-desc",
+  limit = 50,
+  offset = 0
 ): Promise<{ transactions: TransactionListItem[]; totalCount: number }> {
   const user = await getAuthenticatedUser();
 
@@ -477,7 +567,7 @@ export async function exportTransactionsCSV(
   dateRange?: DateRange,
   selectedCategories?: string[],
   searchTerm?: string,
-  sortBy: string = "date-desc"
+  sortBy = "date-desc"
 ): Promise<string> {
   const { transactions } = await getFilteredTransactions(
     dateRange,
