@@ -219,7 +219,7 @@ export function TransactionFormDialog({
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-categories" disabled>
                       No categories available
                     </SelectItem>
                   )}
