@@ -8,6 +8,7 @@ import { AccountSettings } from "./account-settings"
 import { NotificationSettings } from "./notification-settings"
 import { SecuritySettings } from "./security-settings"
 import { PaymentMethodsSettings } from "./payment-methods-settings"
+import { CategorySettings } from "./category-settings"
 import { ConnectedAccountsSettings } from "./connected-accounts-settings"
 import { AppearanceSettings } from "./appearance-settings"
 import { DataSettings } from "./data-settings"
@@ -48,6 +49,9 @@ export default function SettingsPage() {
             <TabsTrigger value="payment-methods" className="px-3 py-1.5 text-sm">
               Payment
             </TabsTrigger>
+            <TabsTrigger value="categories" className="px-3 py-1.5 text-sm">
+              Categories
+            </TabsTrigger>
             <TabsTrigger value="connected-accounts" className="px-3 py-1.5 text-sm">
               Connections
             </TabsTrigger>
@@ -86,6 +90,12 @@ export default function SettingsPage() {
                 Payment Methods
               </TabsTrigger>
               <TabsTrigger
+                value="categories"
+                className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
+              >
+                Categories
+              </TabsTrigger>
+              <TabsTrigger
                 value="connected-accounts"
                 className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
               >
@@ -116,6 +126,9 @@ export default function SettingsPage() {
             </TabsContent>
             <TabsContent value="payment-methods" className="space-y-6 mt-0">
               <PaymentMethodsSettings />
+            </TabsContent>
+            <TabsContent value="categories" className="space-y-6 mt-0">
+              <CategorySettings />
             </TabsContent>
             <TabsContent value="connected-accounts" className="space-y-6 mt-0">
               <ConnectedAccountsSettings />
