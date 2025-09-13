@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CameraIcon, Loader2Icon } from "lucide-react"
+import { toast } from "sonner"
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -19,39 +19,66 @@ const profileFormSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
-  bio: z.string().max(160).optional(),
-  phone: z.string().optional(),
-  location: z.string().optional(),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 
-// This would typically come from an API or database
-const defaultValues: Partial<ProfileFormValues> = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  bio: "Finance enthusiast and budget planner. I love tracking expenses and finding ways to save money.",
-  phone: "+1 (555) 123-4567",
-  location: "New York, NY",
-}
-
 export function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {
+      name: "",
+      email: "",
+    },
     mode: "onChange",
   })
 
-  function onSubmit(data: ProfileFormValues) {
+  useEffect(() => {
+    async function fetchUserProfile() {
+      try {
+        const response = await fetch("/api/user/profile")
+        if (response.ok) {
+          const userData = await response.json()
+          form.reset({
+            name: userData.name || "",
+            email: userData.email || "",
+          })
+        }
+      } catch (error) {
+        toast.error("Failed to load profile data")
+      } finally {
+        setIsFetching(false)
+      }
+    }
+
+    void fetchUserProfile()
+  }, [form])
+
+  async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log(data)
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: data.name }),
+      })
+
+      if (response.ok) {
+        toast.success("Profile updated successfully")
+      } else {
+        toast.error("Failed to update profile")
+      }
+    } catch (error) {
+      toast.error("An error occurred")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -65,10 +92,12 @@ export function ProfileSettings() {
           <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
             <div className="flex flex-col items-center gap-2">
               <Avatar className="h-24 w-24">
-                <AvatarImage src="/placeholder-user.jpg" alt="Profile" />
-                <AvatarFallback className="text-2xl">JD</AvatarFallback>
+                <AvatarImage src={form.watch("email") ? `https://api.dicebear.com/7.x/initials/svg?seed=${form.watch("email")}` : ""} alt="Profile" />
+                <AvatarFallback className="text-2xl">
+                  {form.watch("name")?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm" className="mt-2">
+              <Button variant="outline" size="sm" className="mt-2" disabled>
                 <CameraIcon className="mr-2 h-4 w-4" />
                 Change Photo
               </Button>
@@ -84,7 +113,7 @@ export function ProfileSettings() {
                         <FormItem>
                           <FormLabel>Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Your name" {...field} />
+                            <Input placeholder="Your name" {...field} disabled={isFetching} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -97,61 +126,23 @@ export function ProfileSettings() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="Your email" {...field} />
+                            <Input 
+                              placeholder="Your email" 
+                              {...field} 
+                              disabled 
+                              className="bg-muted" 
+                            />
                           </FormControl>
+                          <FormDescription className="text-xs">
+                            Email is managed by your OAuth provider
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your phone number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your location" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bio</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Tell us a little bit about yourself"
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>Brief description for your profile. Maximum 160 characters.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   <div className="flex justify-end">
-                    <Button type="submit" disabled={isLoading}>
+                    <Button type="submit" disabled={isLoading || isFetching}>
                       {isLoading && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
                       Save Changes
                     </Button>
