@@ -51,6 +51,7 @@
     "@react-stately/data": "^3.11.7",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@tanstack/react-table": "^8.21.2",
+    "@vercel/analytics": "^1.5.0",
     "@yudiel/react-qr-scanner": "^2.3.1",
     "chart.js": "^4.5.0",
     "class-variance-authority": "^0.7.0",

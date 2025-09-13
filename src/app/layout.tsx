@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from "@vercel/analytics/react"
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
@@ -23,6 +24,7 @@ export default function RootLayout({
           <NavbarComponent />
           {children}
           <Toaster />
+          <Analytics />
         </Providers>
       </body>
     </html>
