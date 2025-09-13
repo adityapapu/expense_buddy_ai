@@ -26,7 +26,7 @@ const UserAvatarDropdown = ({user}: {user:User}) => {
                     <p className="font-semibold">{user?.name}</p>
                 </DropdownItem>
                 <DropdownItem key="settings">My Settings</DropdownItem>
-                <DropdownItem key="analytics">Analytics</DropdownItem>
+                <DropdownItem key="analytics" href="/analytics">Analytics</DropdownItem>
                 <DropdownItem key="configurations">Configurations</DropdownItem>
                 <DropdownItem key="help_and_feedback">Help & Feedback</DropdownItem>
                 <DropdownItem key="logout" color="danger" onClick={async () => {

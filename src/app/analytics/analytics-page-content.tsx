@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-export function ReportsPageContent() {
+export function AnalyticsPageContent() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1),
     to: new Date(),
@@ -34,7 +34,7 @@ export function ReportsPageContent() {
     <div className="container mx-auto py-6 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Financial Reports</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Financial Analytics</h1>
           <p className="text-muted-foreground">Analyze your financial data and gain valuable insights</p>
         </div>
         <ExportOptions />

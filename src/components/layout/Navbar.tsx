@@ -30,8 +30,8 @@ export default async function NavbarComponent() {
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="/reports">
-            Reports
+          <Link color="foreground" href="/analytics">
+            Analytics
           </Link>
         </NavbarItem>
         <NavbarItem>
@@ -71,8 +71,8 @@ export default async function NavbarComponent() {
           </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
-          <Link color="foreground" href="/reports" className="w-full">
-            Reports
+          <Link color="foreground" href="/analytics" className="w-full">
+            Analytics
           </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
