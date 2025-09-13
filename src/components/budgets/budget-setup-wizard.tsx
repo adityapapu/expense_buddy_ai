@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, PiggyBankIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { BudgetCategoryAllocation } from "./budget-category-allocation"
+import { createBudget } from "@/lib/actions/budgets"
+import { getCategories } from "@/lib/actions/filters"
+import { useToast } from "@/components/ui/use-toast"
 
 // Default categories with icons and suggested percentages
 const defaultCategories = [
@@ -29,7 +32,7 @@ interface BudgetSetupWizardProps {
 
 export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
   const [step, setStep] = useState(1)
-  const [totalBudget, setTotalBudget] = useState(2000)
+  const [totalBudget, setTotalBudget] = useState(5000)
   const [categories, setCategories] = useState(() => {
     // Initialize category amounts based on percentages
     return defaultCategories.map((cat) => ({
@@ -37,7 +40,20 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
       amount: (cat.percentage / 100) * totalBudget,
     }))
   })
+  const [realCategories, setRealCategories] = useState<{ id: string; name: string }[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
+
+  // Fetch real categories on component mount
+  useEffect(() => {
+    void getCategories()
+      .then(categoryData => {
+        setRealCategories(categoryData)
+      })
+      .catch(error => {
+        console.error("Failed to fetch categories:", error)
+      })
+  }, [])
 
   // Calculate total allocated percentage
   const totalAllocated = categories.reduce((sum, cat) => sum + cat.percentage, 0)
@@ -96,19 +112,105 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
-      // This would typically be an API call to save the budget
-      console.log("Saving budget:", {
-        totalBudget,
-        categories,
-        month: new Date().toISOString().slice(0, 7), // YYYY-MM format
+      const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+      const monthStart = new Date(currentMonth + "-01")
+      const monthEnd = new Date(new Date(currentMonth + "-01").setMonth(monthStart.getMonth() + 1) - 1)
+
+      // Convert dates to ISO string format for the server action
+      const startDateString = monthStart.toISOString()
+      const endDateString = monthEnd.toISOString()
+
+      // Map default categories to real categories with better matching
+      const categoryMap: Record<string, string> = {
+        "1": realCategories.find(c =>
+          c.name.toLowerCase().includes("house") ||
+          c.name.toLowerCase().includes("rent") ||
+          c.name.toLowerCase().includes("home")
+        )?.id || "",
+        "2": realCategories.find(c =>
+          c.name.toLowerCase().includes("food") ||
+          c.name.toLowerCase().includes("groceries") ||
+          c.name.toLowerCase().includes("restaurant") ||
+          c.name.toLowerCase().includes("dining")
+        )?.id || "",
+        "3": realCategories.find(c =>
+          c.name.toLowerCase().includes("transport") ||
+          c.name.toLowerCase().includes("travel") ||
+          c.name.toLowerCase().includes("fuel") ||
+          c.name.toLowerCase().includes("auto") ||
+          c.name.toLowerCase().includes("car")
+        )?.id || "",
+        "4": realCategories.find(c =>
+          c.name.toLowerCase().includes("utility") ||
+          c.name.toLowerCase().includes("bill") ||
+          c.name.toLowerCase().includes("electric") ||
+          c.name.toLowerCase().includes("water")
+        )?.id || "",
+        "5": realCategories.find(c =>
+          c.name.toLowerCase().includes("entertainment") ||
+          c.name.toLowerCase().includes("movie") ||
+          c.name.toLowerCase().includes("game") ||
+          c.name.toLowerCase().includes("subscription")
+        )?.id || "",
+        "6": realCategories.find(c =>
+          c.name.toLowerCase().includes("health") ||
+          c.name.toLowerCase().includes("medical") ||
+          c.name.toLowerCase().includes("doctor") ||
+          c.name.toLowerCase().includes("medicine")
+        )?.id || "",
+        "7": realCategories.find(c =>
+          c.name.toLowerCase().includes("personal") ||
+          c.name.toLowerCase().includes("shopping") ||
+          c.name.toLowerCase().includes("clothes") ||
+          c.name.toLowerCase().includes("misc")
+        )?.id || "",
+        "8": realCategories.find(c =>
+          c.name.toLowerCase().includes("saving") ||
+          c.name.toLowerCase().includes("investment") ||
+          c.name.toLowerCase().includes("emergency") ||
+          c.name.toLowerCase().includes("fund")
+        )?.id || "",
+      }
+
+      // Filter out categories that don't have matching real categories
+      const validCategories = categories.filter(cat => {
+        const realCategoryId = categoryMap[cat.id]
+        return realCategoryId && cat.amount > 0
       })
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (validCategories.length === 0) {
+        throw new Error("No matching categories found. Please create categories first.")
+      }
+
+      // Create budgets for each category with non-zero allocation
+      for (const category of categories) {
+        if (category.amount > 0) {
+          const realCategoryId = categoryMap[category.id]
+          if (realCategoryId) {
+            await createBudget({
+              categoryId: realCategoryId,
+              amount: category.amount,
+              startDate: startDateString,
+              endDate: endDateString,
+              icon: category.icon,
+            })
+          }
+        }
+      }
+
+      toast({
+        title: "Budget Created",
+        description: "Your monthly budget has been successfully set up!",
+      })
 
       onComplete()
     } catch (error) {
       console.error("Error saving budget:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save your budget. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -138,7 +240,7 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
             <div className="space-y-2">
               <Label htmlFor="total-budget">Total Monthly Budget</Label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5">$</span>
+                <span className="absolute left-3 top-2.5">₹</span>
                 <Input
                   id="total-budget"
                   type="number"
@@ -161,9 +263,9 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
                 onValueChange={(values) => handleTotalBudgetChange(values[0] ?? 0)}
               />
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>$1,000</span>
-                <span>$5,000</span>
-                <span>$10,000</span>
+                <span>₹1,000</span>
+                <span>₹5,000</span>
+                <span>₹10,000</span>
               </div>
             </div>
 

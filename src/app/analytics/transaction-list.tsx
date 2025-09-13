@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { DateRange } from "react-day-picker"
 import { formatCurrency } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Loader2 } from "lucide-react"
 import { format } from "date-fns"
+import { getFilteredTransactions, type TransactionListItem } from "@/lib/actions/analytics"
 
 interface TransactionListProps {
   dateRange: DateRange | undefined
@@ -18,127 +20,54 @@ interface TransactionListProps {
 export function TransactionList({ dateRange, selectedCategories }: TransactionListProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("date-desc")
+  const [transactions, setTransactions] = useState<TransactionListItem[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [offset, setOffset] = useState(0)
+  const limit = 50 // Number of transactions per page
 
-  // In a real app, you would fetch this data based on the date range and selected categories
-  // This is mock data for demonstration
-  const transactions = [
-    {
-      id: "1",
-      date: new Date(2023, 5, 28),
-      description: "Monthly Rent",
-      category: { id: "1", name: "Housing", icon: "🏠" },
-      amount: 1900.0,
-      type: "expense",
-    },
-    {
-      id: "2",
-      date: new Date(2023, 5, 25),
-      description: "Grocery Shopping",
-      category: { id: "2", name: "Food & Dining", icon: "🍔" },
-      amount: 187.45,
-      type: "expense",
-    },
-    {
-      id: "3",
-      date: new Date(2023, 5, 22),
-      description: "Gas Station",
-      category: { id: "3", name: "Transportation", icon: "🚗" },
-      amount: 45.8,
-      type: "expense",
-    },
-    {
-      id: "4",
-      date: new Date(2023, 5, 20),
-      description: "Movie Tickets",
-      category: { id: "4", name: "Entertainment", icon: "🎬" },
-      amount: 32.5,
-      type: "expense",
-    },
-    {
-      id: "5",
-      date: new Date(2023, 5, 18),
-      description: "Online Shopping",
-      category: { id: "5", name: "Shopping", icon: "🛍️" },
-      amount: 124.99,
-      type: "expense",
-    },
-    {
-      id: "6",
-      date: new Date(2023, 5, 15),
-      description: "Electricity Bill",
-      category: { id: "6", name: "Utilities", icon: "💡" },
-      amount: 85.32,
-      type: "expense",
-    },
-    {
-      id: "7",
-      date: new Date(2023, 5, 12),
-      description: "Doctor's Visit",
-      category: { id: "7", name: "Healthcare", icon: "🏥" },
-      amount: 75.0,
-      type: "expense",
-    },
-    {
-      id: "8",
-      date: new Date(2023, 5, 10),
-      description: "Weekend Getaway",
-      category: { id: "8", name: "Travel", icon: "✈️" },
-      amount: 350.0,
-      type: "expense",
-    },
-    {
-      id: "9",
-      date: new Date(2023, 5, 5),
-      description: "Restaurant Dinner",
-      category: { id: "2", name: "Food & Dining", icon: "🍔" },
-      amount: 78.5,
-      type: "expense",
-    },
-    {
-      id: "10",
-      date: new Date(2023, 5, 1),
-      description: "Salary Deposit",
-      category: { id: "9", name: "Income", icon: "💰" },
-      amount: 4500.0,
-      type: "income",
-    },
-  ]
-
-  // Filter transactions based on search term, date range, and selected categories
-  const filteredTransactions = transactions.filter((transaction) => {
-    // Filter by search term
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase())
-
-    // Filter by date range
-    const matchesDateRange = dateRange
-      ? dateRange.from && dateRange.to
-        ? transaction.date >= dateRange.from && transaction.date <= dateRange.to
-        : dateRange.from
-          ? transaction.date >= dateRange.from
-          : true
-      : true
-
-    // Filter by selected categories
-    const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(transaction.category.id)
-
-    return matchesSearch && matchesDateRange && matchesCategories
-  })
-
-  // Sort transactions
-  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-    switch (sortBy) {
-      case "date-asc":
-        return a.date.getTime() - b.date.getTime()
-      case "date-desc":
-        return b.date.getTime() - a.date.getTime()
-      case "amount-asc":
-        return a.amount - b.amount
-      case "amount-desc":
-        return b.amount - a.amount
-      default:
-        return 0
+  // Fetch transactions when filters change
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const result = await getFilteredTransactions(
+          dateRange,
+          selectedCategories,
+          searchTerm,
+          sortBy,
+          limit,
+          offset
+        )
+        setTransactions(result.transactions)
+        setTotalCount(result.totalCount)
+      } catch (err) {
+        console.error("Failed to fetch transactions:", err)
+        setError("Failed to load transactions")
+        setTransactions([])
+        setTotalCount(0)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  })
+
+    // Debounce search to avoid too many API calls
+    const debounceTimer = setTimeout(fetchTransactions, searchTerm ? 300 : 0)
+
+    return () => clearTimeout(debounceTimer)
+  }, [dateRange, selectedCategories, searchTerm, sortBy, offset])
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+    setOffset(0) // Reset to first page when searching
+  }
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value)
+    setOffset(0) // Reset to first page when sorting
+  }
 
   return (
     <div className="space-y-4">
@@ -146,10 +75,10 @@ export function TransactionList({ dateRange, selectedCategories }: TransactionLi
         <Input
           placeholder="Search transactions..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="max-w-xs"
         />
-        <Select value={sortBy} onValueChange={setSortBy}>
+        <Select value={sortBy} onValueChange={handleSortChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -173,10 +102,25 @@ export function TransactionList({ dateRange, selectedCategories }: TransactionLi
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTransactions.length > 0 ? (
-              sortedTransactions.map((transaction) => (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading transactions...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  <p className="text-muted-foreground">{error}</p>
+                </TableCell>
+              </TableRow>
+            ) : transactions.length > 0 ? (
+              transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
-                  <TableCell className="font-medium">{format(transaction.date, "MMM dd, yyyy")}</TableCell>
+                  <TableCell className="font-medium">{format(new Date(transaction.date), "MMM dd, yyyy")}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="flex w-fit items-center gap-1">
@@ -186,7 +130,7 @@ export function TransactionList({ dateRange, selectedCategories }: TransactionLi
                   </TableCell>
                   <TableCell className={`text-right ${transaction.type === "income" ? "text-green-600" : ""}`}>
                     {transaction.type === "income" ? "+" : ""}
-                    {formatCurrency(transaction.amount)}
+                    {formatCurrency(Math.abs(transaction.amount))}
                   </TableCell>
                 </TableRow>
               ))
@@ -200,7 +144,18 @@ export function TransactionList({ dateRange, selectedCategories }: TransactionLi
           </TableBody>
         </Table>
       </ScrollArea>
+
+      {/* Pagination info */}
+      {!isLoading && !error && totalCount > 0 && (
+        <div className="text-sm text-muted-foreground text-center py-2">
+          Showing {transactions.length} of {totalCount} transactions
+          {totalCount > limit && (
+            <span className="ml-2">
+              (Page {Math.floor(offset / limit) + 1} of {Math.ceil(totalCount / limit)})
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
-

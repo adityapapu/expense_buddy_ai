@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
-import { CalendarIcon, ChevronDown } from "lucide-react"
+import { CalendarIcon, ChevronDown, Loader2 } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -12,18 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
-
-// Mock categories data - in a real app, this would come from your database
-const categories = [
-  { id: "1", name: "Food & Dining", icon: "🍔" },
-  { id: "2", name: "Transportation", icon: "🚗" },
-  { id: "3", name: "Housing", icon: "🏠" },
-  { id: "4", name: "Entertainment", icon: "🎬" },
-  { id: "5", name: "Shopping", icon: "🛍️" },
-  { id: "6", name: "Utilities", icon: "💡" },
-  { id: "7", name: "Healthcare", icon: "🏥" },
-  { id: "8", name: "Travel", icon: "✈️" },
-]
+import { getUserCategories, type CategoryData } from "@/lib/actions/analytics"
 
 interface ReportFiltersProps {
   dateRange: DateRange | undefined
@@ -39,6 +28,29 @@ export function ReportFilters({
   onCategoryChange,
 }: ReportFiltersProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [categories, setCategories] = useState<CategoryData[]>([])
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch user categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoadingCategories(true)
+        setError(null)
+        const userCategories = await getUserCategories()
+        setCategories(userCategories)
+      } catch (err) {
+        console.error("Failed to fetch categories:", err)
+        setError("Failed to load categories")
+        setCategories([])
+      } finally {
+        setIsLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
 
   const handleCategoryToggle = (categoryId: string) => {
     if (selectedCategories.includes(categoryId)) {
@@ -119,27 +131,41 @@ export function ReportFilters({
           </div>
 
           <CollapsibleContent className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {categories.map((category) => (
-                <div key={category.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`category-${category.id}`}
-                    checked={selectedCategories.includes(category.id)}
-                    onCheckedChange={() => handleCategoryToggle(category.id)}
-                  />
-                  <label
-                    htmlFor={`category-${category.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    {category.icon} {category.name}
-                  </label>
-                </div>
-              ))}
-            </div>
+            {isLoadingCategories ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading categories...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                {error}
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                No categories found. Create some categories to see them here.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category.id}`}
+                      checked={selectedCategories.includes(category.id)}
+                      onCheckedChange={() => handleCategoryToggle(category.id)}
+                    />
+                    <label
+                      htmlFor={`category-${category.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {category.icon} {category.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
           </CollapsibleContent>
         </Collapsible>
       </CardContent>
     </Card>
   )
 }
-

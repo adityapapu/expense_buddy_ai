@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -22,20 +22,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-
-// This would typically come from an API or database
-const categories = [
-  { id: "1", name: "Housing", icon: "🏠" },
-  { id: "2", name: "Food", icon: "🍔" },
-  { id: "3", name: "Transportation", icon: "🚗" },
-  { id: "4", name: "Entertainment", icon: "🎬" },
-  { id: "5", name: "Utilities", icon: "💡" },
-  { id: "6", name: "Healthcare", icon: "🏥" },
-  { id: "7", name: "Personal", icon: "👤" },
-  { id: "8", name: "Savings", icon: "💰" },
-  { id: "9", name: "Shopping", icon: "🛍️" },
-  { id: "10", name: "Education", icon: "📚" },
-]
+import { useToast } from "@/components/ui/use-toast"
+import { createBudget, updateBudget, type Budget } from "@/lib/actions/budgets"
+import { getCategories } from "@/lib/actions/filters"
 
 const formSchema = z.object({
   categoryId: z.string({
@@ -57,10 +46,29 @@ interface BudgetFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   defaultValues?: z.infer<typeof formSchema>
+  editingBudget?: Budget
 }
 
-export function BudgetFormDialog({ open, onOpenChange, defaultValues }: BudgetFormDialogProps) {
+export function BudgetFormDialog({ open, onOpenChange, defaultValues, editingBudget }: BudgetFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoryData = await getCategories()
+        setCategories(categoryData)
+        setLoadingCategories(false)
+      } catch (error) {
+        console.error("Failed to fetch categories:", error)
+        setLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
 
   type FormData = z.infer<typeof formSchema>
   const form = useForm<FormData>({
@@ -68,8 +76,8 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues }: BudgetFo
     defaultValues: defaultValues ?? {
       categoryId: "",
       amount: 0,
-      startDate: new Date(),
-      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
       icon: "",
     },
   })
@@ -77,15 +85,28 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues }: BudgetFo
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
-      // This would typically be an API call to create or update a budget
-      console.log("Form values:", values)
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      if (editingBudget) {
+        await updateBudget(editingBudget.id, values)
+        toast({
+          title: "Budget updated",
+          description: "Your budget has been successfully updated.",
+        })
+      } else {
+        await createBudget(values)
+        toast({
+          title: "Budget created",
+          description: "Your new budget has been successfully created.",
+        })
+      }
 
       onOpenChange(false)
     } catch (error) {
       console.error("Error submitting form:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save budget",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -118,14 +139,21 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues }: BudgetFo
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center">
-                            <span className="mr-2">{category.icon}</span>
-                            <span>{category.name}</span>
-                          </div>
+                      {loadingCategories ? (
+                        <SelectItem value="loading" disabled>
+                          Loading categories...
                         </SelectItem>
-                      ))}
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            <span>{category.name}</span>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-categories" disabled>
+                          No categories available
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormDescription>Select the category for this budget.</FormDescription>
@@ -142,7 +170,7 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues }: BudgetFo
                   <FormLabel>Budget Amount</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3 top-2.5">$</span>
+                      <span className="absolute left-3 top-2.5">₹</span>
                       <Input type="number" step="0.01" placeholder="0.00" className="pl-7" {...field} />
                     </div>
                   </FormControl>

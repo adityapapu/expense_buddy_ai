@@ -4,13 +4,13 @@ import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { ProfileSettings } from "./profile-settings"
-import { AccountSettings } from "./account-settings"
 import { NotificationSettings } from "./notification-settings"
-import { SecuritySettings } from "./security-settings"
 import { PaymentMethodsSettings } from "./payment-methods-settings"
 import { CategorySettings } from "./category-settings"
-import { ConnectedAccountsSettings } from "./connected-accounts-settings"
-import { AppearanceSettings } from "./appearance-settings"
+import { BudgetSettings } from "./budget-settings"
+import { TagSettings } from "./tag-settings"
+import { RecurringExpensesSettings } from "./recurring-expenses-settings"
+import { FriendsSettings } from "./friends-settings"
 import { DataSettings } from "./data-settings"
 
 export default function SettingsPage() {
@@ -37,26 +37,26 @@ export default function SettingsPage() {
             <TabsTrigger value="profile" className="px-3 py-1.5 text-sm">
               Profile
             </TabsTrigger>
-            <TabsTrigger value="account" className="px-3 py-1.5 text-sm">
-              Account
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="px-3 py-1.5 text-sm">
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="security" className="px-3 py-1.5 text-sm">
-              Security
-            </TabsTrigger>
             <TabsTrigger value="payment-methods" className="px-3 py-1.5 text-sm">
               Payment
             </TabsTrigger>
             <TabsTrigger value="categories" className="px-3 py-1.5 text-sm">
               Categories
             </TabsTrigger>
-            <TabsTrigger value="connected-accounts" className="px-3 py-1.5 text-sm">
-              Connections
+            <TabsTrigger value="budgets" className="px-3 py-1.5 text-sm">
+              Budgets
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="px-3 py-1.5 text-sm">
-              Appearance
+            <TabsTrigger value="tags" className="px-3 py-1.5 text-sm">
+              Tags
+            </TabsTrigger>
+            <TabsTrigger value="recurring-expenses" className="px-3 py-1.5 text-sm">
+              Recurring Expenses
+            </TabsTrigger>
+            <TabsTrigger value="friends" className="px-3 py-1.5 text-sm">
+              Friends
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="px-3 py-1.5 text-sm">
+              Notifications
             </TabsTrigger>
             <TabsTrigger value="data" className="px-3 py-1.5 text-sm">
               Data
@@ -71,18 +71,6 @@ export default function SettingsPage() {
               <TabsTrigger value="profile" className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted">
                 Profile
               </TabsTrigger>
-              <TabsTrigger value="account" className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted">
-                Account
-              </TabsTrigger>
-              <TabsTrigger
-                value="notifications"
-                className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
-              >
-                Notifications
-              </TabsTrigger>
-              <TabsTrigger value="security" className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted">
-                Security
-              </TabsTrigger>
               <TabsTrigger
                 value="payment-methods"
                 className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
@@ -96,13 +84,34 @@ export default function SettingsPage() {
                 Categories
               </TabsTrigger>
               <TabsTrigger
-                value="connected-accounts"
+                value="budgets"
                 className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
               >
-                Connected Accounts
+                Budgets
               </TabsTrigger>
-              <TabsTrigger value="appearance" className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted">
-                Appearance
+              <TabsTrigger
+                value="tags"
+                className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
+              >
+                Tags
+              </TabsTrigger>
+              <TabsTrigger
+                value="recurring-expenses"
+                className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
+              >
+                Recurring Expenses
+              </TabsTrigger>
+              <TabsTrigger
+                value="friends"
+                className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
+              >
+                Friends
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted"
+              >
+                Notifications
               </TabsTrigger>
               <TabsTrigger value="data" className="w-full justify-start px-3 py-2 data-[state=active]:bg-muted">
                 Data & Privacy
@@ -115,26 +124,26 @@ export default function SettingsPage() {
             <TabsContent value="profile" className="space-y-6 mt-0">
               <ProfileSettings />
             </TabsContent>
-            <TabsContent value="account" className="space-y-6 mt-0">
-              <AccountSettings />
-            </TabsContent>
-            <TabsContent value="notifications" className="space-y-6 mt-0">
-              <NotificationSettings />
-            </TabsContent>
-            <TabsContent value="security" className="space-y-6 mt-0">
-              <SecuritySettings />
-            </TabsContent>
             <TabsContent value="payment-methods" className="space-y-6 mt-0">
               <PaymentMethodsSettings />
             </TabsContent>
             <TabsContent value="categories" className="space-y-6 mt-0">
               <CategorySettings />
             </TabsContent>
-            <TabsContent value="connected-accounts" className="space-y-6 mt-0">
-              <ConnectedAccountsSettings />
+            <TabsContent value="budgets" className="space-y-6 mt-0">
+              <BudgetSettings />
             </TabsContent>
-            <TabsContent value="appearance" className="space-y-6 mt-0">
-              <AppearanceSettings />
+            <TabsContent value="tags" className="space-y-6 mt-0">
+              <TagSettings />
+            </TabsContent>
+            <TabsContent value="recurring-expenses" className="space-y-6 mt-0">
+              <RecurringExpensesSettings />
+            </TabsContent>
+            <TabsContent value="friends" className="space-y-6 mt-0">
+              <FriendsSettings />
+            </TabsContent>
+            <TabsContent value="notifications" className="space-y-6 mt-0">
+              <NotificationSettings />
             </TabsContent>
             <TabsContent value="data" className="space-y-6 mt-0">
               <DataSettings />

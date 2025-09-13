@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
@@ -9,24 +9,74 @@ import { BellIcon, DollarSignIcon, TrendingDownIcon } from "lucide-react"
 import { BudgetAllocationChart } from "./budget-allocation-chart"
 import { BudgetSpendingTrend } from "./budget-spending-trend"
 import { formatCurrency } from "@/lib/utils"
-
-// This would typically come from an API or database
-const budgetSummary = {
-  totalBudgeted: 2000,
-  totalSpent: 1350,
-  percentageUsed: 67.5,
-  remainingDays: 12,
-  overBudgetCategories: [
-    { name: "Dining Out", budgeted: 300, spent: 425, percentage: 141.7 },
-    { name: "Entertainment", budgeted: 150, spent: 180, percentage: 120 },
-  ],
-  nearLimitCategories: [{ name: "Groceries", budgeted: 500, spent: 425, percentage: 85 }],
-}
+import { getBudgetSummary, type BudgetSummary } from "@/lib/actions/budgets"
 
 export function BudgetOverview() {
   const [activeTab, setActiveTab] = useState("overview")
+  const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // getBudgetStatusColor function removed as it was unused
+  useEffect(() => {
+    const fetchBudgetSummary = async () => {
+      try {
+        setLoading(true)
+        const data = await getBudgetSummary()
+        setBudgetSummary(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load budget summary")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBudgetSummary()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget Overview</CardTitle>
+          <CardDescription>Loading budget data...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-20 bg-muted animate-pulse rounded"></div>
+            <div className="h-32 bg-muted animate-pulse rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget Overview</CardTitle>
+          <CardDescription>Error loading budget data</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!budgetSummary) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget Overview</CardTitle>
+          <CardDescription>No budget data available</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Create your first budget to see spending analysis.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>

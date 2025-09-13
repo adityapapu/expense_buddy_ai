@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
@@ -18,88 +18,73 @@ import {
 import { AlertCircleIcon, CheckCircleIcon, EditIcon, MoreHorizontalIcon, SearchIcon, TrashIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { BudgetEditDialog } from "./budget-edit-dialog"
+import { getBudgets, getBudgetSpending, deleteBudget, type Budget, type BudgetSpending } from "@/lib/actions/budgets"
+import { useToast } from "@/components/ui/use-toast"
 
-// This would typically come from an API or database
-const budgets = [
-  {
-    id: "1",
-    category: { id: "1", name: "Housing", icon: "🏠" },
-    amount: 1000,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 950,
-    percentageUsed: 95,
-  },
-  {
-    id: "2",
-    category: { id: "2", name: "Food", icon: "🍔" },
-    amount: 500,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 425,
-    percentageUsed: 85,
-  },
-  {
-    id: "3",
-    category: { id: "3", name: "Transportation", icon: "🚗" },
-    amount: 200,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 180,
-    percentageUsed: 90,
-  },
-  {
-    id: "4",
-    category: { id: "4", name: "Entertainment", icon: "🎬" },
-    amount: 150,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 180,
-    percentageUsed: 120,
-  },
-  {
-    id: "5",
-    category: { id: "5", name: "Utilities", icon: "💡" },
-    amount: 300,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 275,
-    percentageUsed: 92,
-  },
-  {
-    id: "6",
-    category: { id: "6", name: "Healthcare", icon: "🏥" },
-    amount: 100,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 65,
-    percentageUsed: 65,
-  },
-  {
-    id: "7",
-    category: { id: "7", name: "Personal", icon: "👤" },
-    amount: 150,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 125,
-    percentageUsed: 83,
-  },
-  {
-    id: "8",
-    category: { id: "8", name: "Savings", icon: "💰" },
-    amount: 400,
-    startDate: "2023-05-01",
-    endDate: "2023-05-31",
-    spent: 400,
-    percentageUsed: 100,
-  },
-]
+interface BudgetWithSpending extends Budget {
+  spent: number;
+  percentageUsed: number;
+  isOverBudget: boolean;
+  isNearLimit: boolean;
+}
 
 export function BudgetsList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
-  const [editBudget, setEditBudget] = useState<(typeof budgets)[0] | null>(null)
+  const [budgets, setBudgets] = useState<BudgetWithSpending[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [editBudget, setEditBudget] = useState<Budget | null>(null)
+  const { toast } = useToast()
 
+  useEffect(() => {
+    const fetchBudgets = async () => {
+      try {
+        setLoading(true)
+        const [budgetData, spendingData] = await Promise.all([
+          getBudgets(),
+          getBudgetSpending()
+        ])
+
+        // Combine budget data with spending information
+        const budgetsWithSpending = budgetData.map(budget => {
+          const spending = spendingData.find(s => s.categoryId === budget.categoryId)
+          return {
+            ...budget,
+            spent: spending?.spentAmount || 0,
+            percentageUsed: spending?.percentageUsed || 0,
+            isOverBudget: spending?.isOverBudget || false,
+            isNearLimit: spending?.isNearLimit || false
+          }
+        })
+
+        setBudgets(budgetsWithSpending)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load budgets")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBudgets()
+  }, [])
+
+  const handleDeleteBudget = async (budgetId: string) => {
+    try {
+      await deleteBudget(budgetId)
+      setBudgets(prev => prev.filter(b => b.id !== budgetId))
+      toast({
+        title: "Budget deleted",
+        description: "The budget has been successfully deleted.",
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to delete budget",
+        variant: "destructive",
+      })
+    }
+  }
 
   const getBudgetStatusIcon = (percentage: number) => {
     if (percentage >= 100) {
@@ -122,6 +107,38 @@ export function BudgetsList() {
 
     return matchesSearch
   })
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Budgets</CardTitle>
+          <CardDescription>Loading your budgets...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-32 bg-muted animate-pulse rounded"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Budgets</CardTitle>
+          <CardDescription>Error loading budgets</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <>
@@ -186,7 +203,10 @@ export function BudgetsList() {
                               Edit Budget
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDeleteBudget(budget.id)}
+                            >
                               <TrashIcon className="mr-2 h-4 w-4" />
                               Delete Budget
                             </DropdownMenuItem>

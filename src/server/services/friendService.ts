@@ -3,7 +3,7 @@
 import { getErrorMessage } from '../../utils/error';
 import { db } from "../db";
 import { getCurrentUser } from "./userService";
-import { type User, type Friend, type FriendRequest, FriendRequestStatus } from "@prisma/client";
+import { type User, type FriendRequest, FriendRequestStatus } from "@prisma/client";
 
 interface FriendResult {
   success: boolean;

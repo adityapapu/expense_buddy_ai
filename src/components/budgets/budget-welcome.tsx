@@ -1,18 +1,55 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronRightIcon, PiggyBankIcon } from "lucide-react"
 import { BudgetSetupWizard } from "./budget-setup-wizard"
+import { getBudgets } from "@/lib/actions/budgets"
 
 interface BudgetWelcomeProps {
-  hasExistingBudgets: boolean
+  hasExistingBudgets?: boolean
 }
 
-export function BudgetWelcome({ hasExistingBudgets }: BudgetWelcomeProps) {
-  // Set to true to immediately show the setup wizard for testing
-  const [showSetupWizard, setShowSetupWizard] = useState(true)
+export function BudgetWelcome({ hasExistingBudgets: propHasExistingBudgets }: BudgetWelcomeProps) {
+  const [showSetupWizard, setShowSetupWizard] = useState(false)
+  const [hasExistingBudgets, setHasExistingBudgets] = useState(propHasExistingBudgets || false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkExistingBudgets = async () => {
+      if (propHasExistingBudgets !== undefined) {
+        setHasExistingBudgets(propHasExistingBudgets)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const budgets = await getBudgets()
+        setHasExistingBudgets(budgets.length > 0)
+      } catch (error) {
+        console.error("Failed to check existing budgets:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkExistingBudgets()
+  }, [propHasExistingBudgets])
+
+  if (loading) {
+    return (
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle>Loading Budget Information</CardTitle>
+          <CardDescription>Checking your existing budgets...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-32 bg-muted animate-pulse rounded"></div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   if (showSetupWizard) {
     return <BudgetSetupWizard onComplete={() => setShowSetupWizard(false)} />

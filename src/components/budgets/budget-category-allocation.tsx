@@ -38,7 +38,7 @@ export function BudgetCategoryAllocation({
           <div className="text-sm font-medium w-16 text-right">{(category?.percentage ?? 0).toFixed(1)}%</div>
           {isEditingAmount ? (
             <div className="relative w-24">
-              <span className="absolute left-2 top-1.5 text-xs">$</span>
+              <span className="absolute left-2 top-1.5 text-xs">₹</span>
               <Input
                 type="number"
                 value={category?.amount ?? 0}
