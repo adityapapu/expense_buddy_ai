@@ -44,7 +44,7 @@ export interface CategoryBreakdownData {
 export interface MonthlyTrendData {
   month: string;
   total: number;
-  [key: string]: number; // For dynamic category keys
+  [key: string]: string | number; // For dynamic category keys
 }
 
 export interface TransactionListItem {
@@ -545,7 +545,7 @@ export async function getFilteredTransactions(
   // Transform to expected format
   const transactions: TransactionListItem[] = transactionParticipants.map(tp => ({
     id: tp.transaction.id,
-    date: tp.transaction.date.toISOString().split("T")[0],
+    date: (tp.transaction.date ? new Date(tp.transaction.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]) as string,
     description: tp.transaction.description,
     category: {
       id: tp.category.id,

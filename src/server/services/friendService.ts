@@ -345,3 +345,6 @@ export const searchUsers = async (query: string): Promise<ListFriendsResult> => 
     };
   }
 };
+
+// Export types
+export type { FriendResult, ListFriendsResult };

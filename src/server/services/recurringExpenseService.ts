@@ -344,3 +344,6 @@ function calculateNextDueDate(startDate: Date, frequency: Frequency): Date {
 
   return nextDate;
 }
+
+// Export types
+export type { RecurringExpenseResult, ListRecurringExpensesResult };

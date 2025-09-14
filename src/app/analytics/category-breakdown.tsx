@@ -38,7 +38,7 @@ export function CategoryBreakdown({ selectedCategories, detailed = false, dateRa
       }
     }
 
-    fetchCategoryData()
+    void fetchCategoryData()
   }, [dateRange, selectedCategories])
 
   const totalExpenses = categoryData.reduce((sum, category) => sum + category.value, 0)
@@ -76,7 +76,7 @@ export function CategoryBreakdown({ selectedCategories, detailed = false, dateRa
     }
 
     const largestCategory = categoryData.reduce((max, category) =>
-      category.value > max.value ? category : max, categoryData[0]
+      category.value > max.value ? category : max, categoryData[0]!
     )
 
     return (

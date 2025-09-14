@@ -31,7 +31,7 @@ export default function BudgetsPage() {
   const [loading, setLoading] = useState(true)
   const [isNewMonth, setIsNewMonth] = useState(false)
   const [previousMonth, setPreviousMonth] = useState<PreviousMonthData | null>(null)
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null)
+  const [editingBudget, setEditingBudget] = useState<Budget | undefined>(undefined)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function BudgetsPage() {
       }
     }
 
-    checkBudgets()
+    void checkBudgets()
   }, [toast])
 
   const handleEditBudget = (budget: Budget) => {
@@ -81,7 +81,7 @@ export default function BudgetsPage() {
   }
 
   const handleCreateBudget = () => {
-    setEditingBudget(null)
+    setEditingBudget(undefined)
     setCreateDialogOpen(true)
   }
 

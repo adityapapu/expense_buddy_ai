@@ -34,7 +34,7 @@ export function BudgetWelcome({ hasExistingBudgets: propHasExistingBudgets }: Bu
       }
     }
 
-    checkExistingBudgets()
+    void checkExistingBudgets()
   }, [propHasExistingBudgets])
 
   if (loading) {

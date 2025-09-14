@@ -49,7 +49,7 @@ export function ReportFilters({
       }
     }
 
-    fetchCategories()
+    void fetchCategories()
   }, [])
 
   const handleCategoryToggle = (categoryId: string) => {

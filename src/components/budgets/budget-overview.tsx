@@ -9,28 +9,30 @@ import { BellIcon, DollarSignIcon, TrendingDownIcon } from "lucide-react"
 import { BudgetAllocationChart } from "./budget-allocation-chart"
 import { BudgetSpendingTrend } from "./budget-spending-trend"
 import { formatCurrency } from "@/lib/utils"
-import { getBudgetSummary, type BudgetSummary } from "@/lib/actions/budgets"
+import { getBudgetSummary, getBudgetSpending, type BudgetSummary, type BudgetSpending } from "@/lib/actions/budgets"
 
 export function BudgetOverview() {
   const [activeTab, setActiveTab] = useState("overview")
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null)
+  const [budgetSpending, setBudgetSpending] = useState<BudgetSpending[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchBudgetSummary = async () => {
-      try {
-        setLoading(true)
-        const data = await getBudgetSummary()
-        setBudgetSummary(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load budget summary")
-      } finally {
+    void Promise.all([
+      getBudgetSummary(),
+      getBudgetSpending()
+    ])
+      .then(([summaryData, spendingData]) => {
+        setBudgetSummary(summaryData)
+        setBudgetSpending(spendingData)
+      })
+      .catch(err => {
+        setError(err instanceof Error ? err.message : "Failed to load budget data")
+      })
+      .finally(() => {
         setLoading(false)
-      }
-    }
-
-    fetchBudgetSummary()
+      })
   }, [])
 
   if (loading) {
@@ -175,7 +177,7 @@ export function BudgetOverview() {
 
           <TabsContent value="allocation">
             <div className="h-[400px]">
-              <BudgetAllocationChart />
+              <BudgetAllocationChart data={budgetSpending} />
             </div>
           </TabsContent>
 

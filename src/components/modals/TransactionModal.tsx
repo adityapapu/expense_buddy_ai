@@ -156,6 +156,19 @@ export default function TransactionModal({
     void fetchData();
   }, [participantType, selectedCategoryId, selectedPaymentMethodId]);
 
+  const resetForm = useCallback(() => {
+    setDescription("");
+    setTotalAmount("");
+    setTransactionDate(format(new Date(), "yyyy-MM-dd"));
+    setReferenceNumber("");
+    setNotes("");
+    setParticipantType(TransactionType.EXPENSE);
+    setParticipantAmount("");
+    setParticipantDescription("");
+    setSelectedTags([]);
+    setErrors({});
+  }, []);
+
   useEffect(() => {
     // Set read-only mode based on the mode prop
     setIsReadOnly(mode === "view");
@@ -184,20 +197,7 @@ export default function TransactionModal({
       // Default values for new transaction
       resetForm();
     }
-  }, [transaction, mode, isOpen]);
-
-  const resetForm = useCallback(() => {
-    setDescription("");
-    setTotalAmount("");
-    setTransactionDate(format(new Date(), "yyyy-MM-dd"));
-    setReferenceNumber("");
-    setNotes("");
-    setParticipantType(TransactionType.EXPENSE);
-    setParticipantAmount("");
-    setParticipantDescription("");
-    setSelectedTags([]);
-    setErrors({});
-  }, []);
+  }, [transaction, mode, isOpen, currentUser, participantAmount, participantDescription, participantType, resetForm]);
 
   const handleClose = useCallback(() => {
     if (externalOnClose) {

@@ -1,9 +1,10 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js"
 import { Doughnut } from "react-chartjs-2"
 import { formatCurrency } from "@/lib/utils";
+import { getBudgetSpending, type BudgetSpending } from "@/lib/actions/budgets";
 
 // Register Chart.js components
 Chart.register(ArcElement, Tooltip, Legend)
@@ -17,29 +18,62 @@ interface TooltipContext {
   dataIndex: number;
 }
 
-// This would typically come from an API or database
-const budgetData = [
-  { category: "Housing", amount: 1000, color: "#FF6384", spent: 950 },
-  { category: "Food", amount: 500, color: "#36A2EB", spent: 425 },
-  { category: "Transportation", amount: 200, color: "#FFCE56", spent: 180 },
-  { category: "Entertainment", amount: 150, color: "#4BC0C0", spent: 180 },
-  { category: "Utilities", amount: 300, color: "#9966FF", spent: 275 },
-  { category: "Healthcare", amount: 100, color: "#FF9F40", spent: 65 },
-  { category: "Personal", amount: 150, color: "#8AC926", spent: 125 },
-  { category: "Savings", amount: 400, color: "#1982C4", spent: 400 },
+// Color palette for charts
+const COLORS = [
+  "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF",
+  "#FF9F40", "#8AC926", "#1982C4", "#FF6B6B", "#4ECDC4",
+  "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8"
 ]
 
-export function BudgetAllocationChart() {
-  // Chart ref removed as it was unused
+interface BudgetAllocationChartProps {
+  data?: BudgetSpending[];
+}
+
+export function BudgetAllocationChart({ data }: BudgetAllocationChartProps) {
+  const [budgetData, setBudgetData] = useState<BudgetSpending[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (data) {
+      setBudgetData(data)
+      setLoading(false)
+    } else {
+      void getBudgetSpending()
+        .then(spendingData => {
+          setBudgetData(spendingData)
+          setLoading(false)
+        })
+        .catch(error => {
+          console.error("Failed to fetch budget spending:", error)
+          setLoading(false)
+        })
+    }
+  }, [data])
+
+  if (loading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">Loading chart data...</div>
+      </div>
+    )
+  }
+
+  if (budgetData.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">No budget data available</div>
+      </div>
+    )
+  }
 
   const chartData = {
-    labels: budgetData.map((item) => item.category),
+    labels: budgetData.map((item) => item.categoryName),
     datasets: [
       {
         label: "Budget Allocation",
-        data: budgetData.map((item) => item.amount),
-        backgroundColor: budgetData.map((item) => item.color),
-        borderColor: budgetData.map((item) => item.color),
+        data: budgetData.map((item) => item.budgetedAmount),
+        backgroundColor: budgetData.map((_, index) => COLORS[index % COLORS.length]),
+        borderColor: budgetData.map((_, index) => COLORS[index % COLORS.length]),
         borderWidth: 1,
         hoverOffset: 10,
       },
@@ -69,8 +103,9 @@ export function BudgetAllocationChart() {
             const dataset = context.dataset
             const total = dataset.data.reduce((acc: number, data: number) => acc + data, 0)
             const percentage = ((value / total) * 100).toFixed(1)
-            const spent = budgetData[context.dataIndex]?.spent ?? 0
-            const spentPercentage = ((spent / value) * 100).toFixed(1)
+            const budgetItem = budgetData[context.dataIndex]
+            const spent = budgetItem?.spentAmount ?? 0
+            const spentPercentage = value > 0 ? ((spent / value) * 100).toFixed(1) : "0.0"
 
             return [
               `${label}: ${formatCurrency(value)} (${percentage}% of total)`,
@@ -88,16 +123,16 @@ export function BudgetAllocationChart() {
         <Doughnut data={chartData} options={options as any} />
       </div>
       <div className="w-full md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {budgetData.map((item) => (
-          <div key={item.category} className="flex items-center p-2 rounded-md border">
-            <div className="h-3 w-3 rounded-full mr-2" style={{ backgroundColor: item.color }} />
+        {budgetData.map((item, index) => (
+          <div key={item.categoryId} className="flex items-center p-2 rounded-md border">
+            <div className="h-3 w-3 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
             <div className="flex-1">
-              <div className="text-sm font-medium">{item.category}</div>
+              <div className="text-sm font-medium">{item.categoryName}</div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
-                  {formatCurrency(item.spent)} of {formatCurrency(item.amount)}
+                  {formatCurrency(item.spentAmount)} of {formatCurrency(item.budgetedAmount)}
                 </span>
-                <span>{((item.spent / item.amount) * 100).toFixed(0)}%</span>
+                <span>{item.percentageUsed.toFixed(0)}%</span>
               </div>
             </div>
           </div>

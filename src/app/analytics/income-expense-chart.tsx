@@ -35,7 +35,7 @@ export function IncomeExpenseChart({ dateRange }: IncomeExpenseChartProps) {
       }
     }
 
-    fetchChartData()
+    void fetchChartData()
   }, [dateRange])
 
   return (

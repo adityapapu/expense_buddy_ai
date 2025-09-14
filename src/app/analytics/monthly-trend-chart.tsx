@@ -45,7 +45,7 @@ export function MonthlyTrendChart({ selectedCategories, dateRange }: MonthlyTren
       }
     }
 
-    fetchData()
+    void fetchData()
   }, [dateRange, selectedCategories])
 
   // Transform categories to the expected format for the chart

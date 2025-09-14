@@ -89,6 +89,20 @@ export default function SplitDetails({
     }
   }, [initialSplits]);
 
+  const notifyParent = useCallback((newSplits: Map<string, number>) => {
+    const splitDetails: Split[] = Array.from(selectedFriends).map(friendId => ({
+      userId: friendId,
+      splitAmount: newSplits.get(friendId) ?? 0,
+      splitType,
+      splitValue: splitType === SplitType.PERCENTAGE
+        ? percentages.get(friendId) ?? null
+        : splitType === SplitType.SHARES
+          ? shares.get(friendId) ?? null
+          : null
+    }));
+    onSplitUpdate(splitDetails);
+  }, [onSplitUpdate, percentages, selectedFriends, shares, splitType]);
+
   useEffect(() => {
     const calculateSplits = () => {
         const selectedFriendsArray = Array.from(selectedFriends);
@@ -153,7 +167,7 @@ export default function SplitDetails({
         notifyParent(newSplits);
     }
     calculateSplits();
-  }, [totalAmount, splitType, selectedFriends, percentages, shares, currentUser.id, splits]);
+  }, [totalAmount, splitType, selectedFriends, percentages, shares, currentUser.id, splits, notifyParent]);
 
   const handleFriendToggle = (friendId: string) => {
     const newSelectedFriends = new Set(selectedFriends);
@@ -190,20 +204,6 @@ export default function SplitDetails({
       }
     }
   };
-
-  const notifyParent = useCallback((newSplits: Map<string, number>) => {
-    const splitDetails: Split[] = Array.from(selectedFriends).map(friendId => ({
-      userId: friendId,
-      splitAmount: newSplits.get(friendId) ?? 0,
-      splitType,
-      splitValue: splitType === SplitType.PERCENTAGE 
-        ? percentages.get(friendId) ?? null
-        : splitType === SplitType.SHARES 
-          ? shares.get(friendId) ?? null
-          : null
-    }));
-    onSplitUpdate(splitDetails);
-  }, [onSplitUpdate, percentages, selectedFriends, shares, splitType]);
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('en-US', {

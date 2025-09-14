@@ -245,9 +245,12 @@ export const deleteTag = async (id: string): Promise<TagResult> => {
 
   } catch (error) {
     console.error('Error deleting tag:', getErrorMessage(error));
-    return { 
+    return {
       success: false,
       message: getErrorMessage(error)
     };
   }
 };
+
+// Export types
+export type { TagResult, ListTagsResult };

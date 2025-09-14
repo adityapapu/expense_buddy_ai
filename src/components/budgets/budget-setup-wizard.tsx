@@ -7,53 +7,84 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, PiggyBankIcon } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, PiggyBankIcon, PlusIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { BudgetCategoryAllocation } from "./budget-category-allocation"
 import { createBudget } from "@/lib/actions/budgets"
 import { getCategories } from "@/lib/actions/filters"
+import { createCategory } from "@/server/services/categoryService"
 import { useToast } from "@/components/ui/use-toast"
+import { type TransactionType } from "@prisma/client"
 
-// Default categories with icons and suggested percentages
-const defaultCategories = [
-  { id: "1", name: "Housing", icon: "🏠", percentage: 30, amount: 0 },
-  { id: "2", name: "Food", icon: "🍔", percentage: 15, amount: 0 },
-  { id: "3", name: "Transportation", icon: "🚗", percentage: 10, amount: 0 },
-  { id: "4", name: "Utilities", icon: "💡", percentage: 10, amount: 0 },
-  { id: "5", name: "Entertainment", icon: "🎬", percentage: 5, amount: 0 },
-  { id: "6", name: "Healthcare", icon: "🏥", percentage: 5, amount: 0 },
-  { id: "7", name: "Personal", icon: "👤", percentage: 5, amount: 0 },
-  { id: "8", name: "Savings", icon: "💰", percentage: 20, amount: 0 },
+// Suggested budget categories with icons and percentages
+const suggestedCategories = [
+  { name: "Housing", icon: "🏠", percentage: 30, keywords: ["house", "rent", "home"] },
+  { name: "Food", icon: "🍔", percentage: 15, keywords: ["food", "groceries", "restaurant", "dining"] },
+  { name: "Transportation", icon: "🚗", percentage: 10, keywords: ["transport", "travel", "fuel", "auto", "car"] },
+  { name: "Utilities", icon: "💡", percentage: 10, keywords: ["utility", "bill", "electric", "water"] },
+  { name: "Entertainment", icon: "🎬", percentage: 5, keywords: ["entertainment", "movie", "game", "subscription"] },
+  { name: "Healthcare", icon: "🏥", percentage: 5, keywords: ["health", "medical", "doctor", "medicine"] },
+  { name: "Personal", icon: "👤", percentage: 5, keywords: ["personal", "shopping", "clothes", "misc"] },
+  { name: "Savings", icon: "💰", percentage: 20, keywords: ["saving", "investment", "emergency", "fund"] },
 ]
 
 interface BudgetSetupWizardProps {
   onComplete: () => void
 }
 
+interface BudgetCategory {
+  id: string
+  name: string
+  icon: string
+  percentage: number
+  amount: number
+  realCategoryId?: string
+  isNew?: boolean
+}
+
 export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
   const [step, setStep] = useState(1)
   const [totalBudget, setTotalBudget] = useState(5000)
-  const [categories, setCategories] = useState(() => {
-    // Initialize category amounts based on percentages
-    return defaultCategories.map((cat) => ({
-      ...cat,
-      amount: (cat.percentage / 100) * totalBudget,
-    }))
-  })
+  const [categories, setCategories] = useState<BudgetCategory[]>([])
   const [realCategories, setRealCategories] = useState<{ id: string; name: string }[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  // Fetch real categories on component mount
+  // Initialize categories with real user data
   useEffect(() => {
     void getCategories()
       .then(categoryData => {
         setRealCategories(categoryData)
+
+        // Auto-map suggested categories to real categories
+        const mappedCategories = suggestedCategories.map(suggested => {
+          const realCategory = categoryData.find(real =>
+            suggested.keywords.some(keyword =>
+              real.name.toLowerCase().includes(keyword)
+            )
+          )
+
+          return {
+            id: suggested.name.toLowerCase().replace(/\s+/g, '-'),
+            name: suggested.name,
+            icon: suggested.icon,
+            percentage: suggested.percentage,
+            amount: (suggested.percentage / 100) * totalBudget,
+            realCategoryId: realCategory?.id,
+            isNew: !realCategory
+          }
+        })
+
+        setCategories(mappedCategories)
+        setLoadingCategories(false)
       })
       .catch(error => {
         console.error("Failed to fetch categories:", error)
+        setLoadingCategories(false)
       })
-  }, [])
+  }, [totalBudget])
 
   // Calculate total allocated percentage
   const totalAllocated = categories.reduce((sum, cat) => sum + cat.percentage, 0)
@@ -108,6 +139,45 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
     )
   }
 
+  // Handle creating a new category
+  const handleCreateCategory = async (name: string, budgetCategory: BudgetCategory) => {
+    try {
+      const result = await createCategory({
+        name,
+        icon: budgetCategory.icon,
+        type: "EXPENSE" as TransactionType,
+      })
+
+      if (result.success && result.category) {
+        // Update real categories list
+        setRealCategories(prev => [...prev, { id: result.category!.id, name: result.category!.name }])
+
+        // Map the budget category to the newly created category
+        setCategories(cats =>
+          cats.map(cat =>
+            cat.id === budgetCategory.id
+              ? { ...cat, realCategoryId: result.category!.id, isNew: false }
+              : cat
+          )
+        )
+
+        toast({
+          title: "Category Created",
+          description: `"${name}" category has been created and mapped.`,
+        })
+      } else {
+        throw new Error(result.message || "Failed to create category")
+      }
+    } catch (error) {
+      console.error("Error creating category:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create category. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   // Handle form submission
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -120,87 +190,29 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
       const startDateString = monthStart.toISOString()
       const endDateString = monthEnd.toISOString()
 
-      // Map default categories to real categories with better matching
-      const categoryMap: Record<string, string> = {
-        "1": realCategories.find(c =>
-          c.name.toLowerCase().includes("house") ||
-          c.name.toLowerCase().includes("rent") ||
-          c.name.toLowerCase().includes("home")
-        )?.id || "",
-        "2": realCategories.find(c =>
-          c.name.toLowerCase().includes("food") ||
-          c.name.toLowerCase().includes("groceries") ||
-          c.name.toLowerCase().includes("restaurant") ||
-          c.name.toLowerCase().includes("dining")
-        )?.id || "",
-        "3": realCategories.find(c =>
-          c.name.toLowerCase().includes("transport") ||
-          c.name.toLowerCase().includes("travel") ||
-          c.name.toLowerCase().includes("fuel") ||
-          c.name.toLowerCase().includes("auto") ||
-          c.name.toLowerCase().includes("car")
-        )?.id || "",
-        "4": realCategories.find(c =>
-          c.name.toLowerCase().includes("utility") ||
-          c.name.toLowerCase().includes("bill") ||
-          c.name.toLowerCase().includes("electric") ||
-          c.name.toLowerCase().includes("water")
-        )?.id || "",
-        "5": realCategories.find(c =>
-          c.name.toLowerCase().includes("entertainment") ||
-          c.name.toLowerCase().includes("movie") ||
-          c.name.toLowerCase().includes("game") ||
-          c.name.toLowerCase().includes("subscription")
-        )?.id || "",
-        "6": realCategories.find(c =>
-          c.name.toLowerCase().includes("health") ||
-          c.name.toLowerCase().includes("medical") ||
-          c.name.toLowerCase().includes("doctor") ||
-          c.name.toLowerCase().includes("medicine")
-        )?.id || "",
-        "7": realCategories.find(c =>
-          c.name.toLowerCase().includes("personal") ||
-          c.name.toLowerCase().includes("shopping") ||
-          c.name.toLowerCase().includes("clothes") ||
-          c.name.toLowerCase().includes("misc")
-        )?.id || "",
-        "8": realCategories.find(c =>
-          c.name.toLowerCase().includes("saving") ||
-          c.name.toLowerCase().includes("investment") ||
-          c.name.toLowerCase().includes("emergency") ||
-          c.name.toLowerCase().includes("fund")
-        )?.id || "",
-      }
-
-      // Filter out categories that don't have matching real categories
-      const validCategories = categories.filter(cat => {
-        const realCategoryId = categoryMap[cat.id]
-        return realCategoryId && cat.amount > 0
-      })
+      // Filter categories that have real category mappings and non-zero amounts
+      const validCategories = categories.filter(cat => cat.realCategoryId && cat.amount > 0)
 
       if (validCategories.length === 0) {
-        throw new Error("No matching categories found. Please create categories first.")
+        throw new Error("No valid categories found. Please map categories to your actual categories first.")
       }
 
-      // Create budgets for each category with non-zero allocation
-      for (const category of categories) {
-        if (category.amount > 0) {
-          const realCategoryId = categoryMap[category.id]
-          if (realCategoryId) {
-            await createBudget({
-              categoryId: realCategoryId,
-              amount: category.amount,
-              startDate: startDateString,
-              endDate: endDateString,
-              icon: category.icon,
-            })
-          }
+      // Create budgets for each valid category
+      for (const category of validCategories) {
+        if (category.realCategoryId && category.amount > 0) {
+          await createBudget({
+            categoryId: category.realCategoryId,
+            amount: category.amount,
+            startDate: startDateString,
+            endDate: endDateString,
+            icon: category.icon,
+          })
         }
       }
 
       toast({
         title: "Budget Created",
-        description: "Your monthly budget has been successfully set up!",
+        description: `Your monthly budget of ${formatCurrency(totalBudget)} has been successfully set up with ${validCategories.length} categories!`,
       })
 
       onComplete()
@@ -208,12 +220,29 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
       console.error("Error saving budget:", error)
       toast({
         title: "Error",
-        description: "Failed to save your budget. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save your budget. Please try again.",
         variant: "destructive",
       })
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (loadingCategories) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <PiggyBankIcon className="h-6 w-6 text-primary" />
+            <CardTitle>Budget Setup</CardTitle>
+          </div>
+          <CardDescription>Loading your categories...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-32 bg-muted animate-pulse rounded"></div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -224,14 +253,15 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
             <PiggyBankIcon className="h-6 w-6 text-primary" />
             <CardTitle>Budget Setup</CardTitle>
           </div>
-          <div className="text-sm text-muted-foreground">Step {step} of 3</div>
+          <div className="text-sm text-muted-foreground">Step {step} of 4</div>
         </div>
         <CardDescription>
           {step === 1 && "Let&apos;s start by setting your total monthly budget."}
           {step === 2 && "Now, allocate your budget across different categories."}
-          {step === 3 && "Review your budget allocation before saving."}
+          {step === 3 && "Map budget categories to your actual categories or create new ones."}
+          {step === 4 && "Review your budget allocation before saving."}
         </CardDescription>
-        <Progress value={(step / 3) * 100} className="h-1" />
+        <Progress value={(step / 4) * 100} className="h-1" />
       </CardHeader>
 
       <CardContent>
@@ -325,6 +355,98 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
 
         {step === 3 && (
           <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium">Category Mapping</h3>
+              <div className="text-sm text-muted-foreground">
+                {categories.filter(cat => cat.realCategoryId).length} of {categories.length} mapped
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {categories.map((category) => (
+                <div key={category.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">{category.icon}</span>
+                      <div>
+                        <h4 className="font-medium">{category.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {formatCurrency(category.amount)} ({category.percentage.toFixed(1)}%)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {category.realCategoryId ? (
+                        <span className="text-sm text-green-600">✓ Mapped</span>
+                      ) : (
+                        <span className="text-sm text-orange-600">⚠ Not mapped</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Map to existing category or create new:</Label>
+                    <div className="flex space-x-2">
+                      <Select
+                        value={category.realCategoryId || ""}
+                        onValueChange={(value) => {
+                          setCategories(cats =>
+                            cats.map(cat =>
+                              cat.id === category.id
+                                ? { ...cat, realCategoryId: value || undefined, isNew: false }
+                                : cat
+                            )
+                          )
+                        }}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {realCategories
+                            .filter(realCat =>
+                              !categories.find(cat => cat.realCategoryId === realCat.id && cat.id !== category.id)
+                            )
+                            .map(realCat => (
+                              <SelectItem key={realCat.id} value={realCat.id}>
+                                {realCat.name}
+                              </SelectItem>
+                            ))
+                          }
+                        </SelectContent>
+                      </Select>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const categoryName = prompt(`Enter name for new "${category.name}" category:`, category.name)
+                          if (categoryName?.trim()) {
+                            void handleCreateCategory(categoryName.trim(), category)
+                          }
+                        }}
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-lg border p-4 bg-blue-50">
+              <h3 className="font-medium mb-2 text-blue-800">Why mapping matters</h3>
+              <ul className="space-y-1 text-sm text-blue-700">
+                <li>• Your transactions will be categorized correctly</li>
+                <li>• Budget tracking will be accurate</li>
+                <li>• Reports will show meaningful data</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-6">
             <div className="rounded-lg border p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-medium">Monthly Budget Summary</h3>
@@ -332,7 +454,7 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
               </div>
 
               <div className="space-y-3">
-                {categories.map((category) => (
+                {categories.filter(cat => cat.realCategoryId).map((category) => (
                   <div key={category.id} className="flex justify-between items-center">
                     <div className="flex items-center">
                       <span className="mr-2">{category.icon}</span>
@@ -398,13 +520,19 @@ export function BudgetSetupWizard({ onComplete }: BudgetSetupWizardProps) {
           </Button>
         )}
 
-        {step < 3 ? (
-          <Button onClick={() => setStep(step + 1)}>
+        {step < 4 ? (
+          <Button
+            onClick={() => setStep(step + 1)}
+            disabled={step === 3 && categories.filter(cat => cat.realCategoryId).length === 0}
+          >
             Next
             <ArrowRightIcon className="ml-2 h-4 w-4" />
           </Button>
         ) : (
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || categories.filter(cat => cat.realCategoryId && cat.amount > 0).length === 0}
+          >
             {isSubmitting ? "Saving..." : "Save Budget"}
             <CheckIcon className="ml-2 h-4 w-4" />
           </Button>

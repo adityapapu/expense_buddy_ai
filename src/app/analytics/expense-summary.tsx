@@ -33,7 +33,7 @@ export function ExpenseSummary({ dateRange }: ExpenseSummaryProps) {
       }
     }
 
-    fetchSummaryData()
+    void fetchSummaryData()
   }, [dateRange])
 
   if (isLoading) {

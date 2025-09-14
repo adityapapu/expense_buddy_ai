@@ -197,8 +197,8 @@ export function BudgetSettings() {
     setSelectedBudget(budget)
     setNewBudgetAmount(budget.amount.toString())
     setNewBudgetCategoryId(budget.categoryId)
-    setNewBudgetStartDate(budget.startDate.split('T')[0])
-    setNewBudgetEndDate(budget.endDate.split('T')[0])
+    setNewBudgetStartDate(budget.startDate.split('T')[0] || "")
+    setNewBudgetEndDate(budget.endDate.split('T')[0] || "")
     setNewBudgetIcon(budget.icon || "")
     setIsEditDialogOpen(true)
   }

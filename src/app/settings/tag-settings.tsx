@@ -75,7 +75,7 @@ export function TagSettings() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [newTagName, setNewTagName] = useState("")
-  const [newTagColor, setNewTagColor] = useState(COLOR_OPTIONS[0].value)
+  const [newTagColor, setNewTagColor] = useState(COLOR_OPTIONS[0]?.value || "#3B82F6")
   const [newTagIcon, setNewTagIcon] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
@@ -142,7 +142,7 @@ export function TagSettings() {
       if (result.success && result.tag) {
         setTags([result.tag, ...tags])
         setNewTagName("")
-        setNewTagColor(COLOR_OPTIONS[0].value)
+        setNewTagColor(COLOR_OPTIONS[0]?.value || "#3B82F6")
         setNewTagIcon("")
         setIsAddDialogOpen(false)
         toast({
@@ -184,7 +184,7 @@ export function TagSettings() {
           tag.id === result.tag?.id ? result.tag : tag
         ))
         setNewTagName("")
-        setNewTagColor(COLOR_OPTIONS[0].value)
+        setNewTagColor(COLOR_OPTIONS[0]?.value || "#3B82F6")
         setNewTagIcon("")
         setSelectedTag(null)
         setIsEditDialogOpen(false)
@@ -213,7 +213,7 @@ export function TagSettings() {
   const handleEditClick = (tag: Tag) => {
     setSelectedTag(tag)
     setNewTagName(tag.name)
-    setNewTagColor(tag.color || COLOR_OPTIONS[0].value)
+    setNewTagColor(tag.color || COLOR_OPTIONS[0]?.value || "#3B82F6")
     setNewTagIcon(tag.icon || "")
     setIsEditDialogOpen(true)
   }
@@ -223,7 +223,7 @@ export function TagSettings() {
   )
 
   const getTagElement = (tag: Tag) => {
-    const colorClass = tag.color || COLOR_OPTIONS[0].value
+    const colorClass = tag.color || COLOR_OPTIONS[0]?.value || "#3B82F6"
     return (
       <Badge className={colorClass}>
         {tag.icon && <span className="mr-1">{tag.icon}</span>}

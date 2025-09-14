@@ -18,7 +18,7 @@ import {
 import { AlertCircleIcon, CheckCircleIcon, EditIcon, MoreHorizontalIcon, SearchIcon, TrashIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { BudgetEditDialog } from "./budget-edit-dialog"
-import { getBudgets, getBudgetSpending, deleteBudget, type Budget, type BudgetSpending } from "@/lib/actions/budgets"
+import { getBudgets, getBudgetSpending, deleteBudget, type Budget } from "@/lib/actions/budgets"
 import { useToast } from "@/components/ui/use-toast"
 
 interface BudgetWithSpending extends Budget {
@@ -34,7 +34,7 @@ export function BudgetsList() {
   const [budgets, setBudgets] = useState<BudgetWithSpending[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editBudget, setEditBudget] = useState<Budget | null>(null)
+  const [editBudget, setEditBudget] = useState<BudgetWithSpending | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export function BudgetsList() {
       }
     }
 
-    fetchBudgets()
+    void fetchBudgets()
   }, [])
 
   const handleDeleteBudget = async (budgetId: string) => {
@@ -187,7 +187,7 @@ export function BudgetsList() {
                     <Card key={budget.id} className="overflow-hidden">
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <div className="flex items-center space-x-2">
-                          <div className="text-xl">{budget.category.icon}</div>
+                          <div className="text-xl">{budget.icon || "💰"}</div>
                           <CardTitle className="text-sm font-medium">{budget.category.name}</CardTitle>
                         </div>
                         <DropdownMenu>

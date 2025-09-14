@@ -281,8 +281,8 @@ export function RecurringExpensesSettings() {
       description: expense.description,
       amount: expense.amount.toString(),
       frequency: expense.frequency,
-      startDate: formatDate(expense.startDate),
-      endDate: formatDate(expense.endDate)
+      startDate: formatDate(expense.startDate) || "",
+      endDate: formatDate(expense.endDate) || ""
     })
     setIsEditDialogOpen(true)
   }
@@ -402,7 +402,7 @@ export function RecurringExpensesSettings() {
                         size="icon"
                         onClick={() => {
                           const id = typeof expense.id === 'string' ? parseInt(expense.id) : expense.id
-                          handleToggle(id)
+                          void handleToggle(id)
                         }}
                         disabled={submitting}
                       >
@@ -425,7 +425,7 @@ export function RecurringExpensesSettings() {
                         size="icon"
                         onClick={() => {
                           const id = typeof expense.id === 'string' ? parseInt(expense.id) : expense.id
-                          handleDelete(id)
+                          void handleDelete(id)
                         }}
                         disabled={submitting}
                       >

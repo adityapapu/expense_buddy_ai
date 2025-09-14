@@ -46,9 +46,10 @@ const currentBudget = {
 interface BudgetEditModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEditBudget: (budget: any) => void;
 }
 
-export function BudgetEditModal({ open, onOpenChange }: BudgetEditModalProps) {
+export function BudgetEditModal({ open, onOpenChange, onEditBudget: _onEditBudget }: BudgetEditModalProps) {
   const [totalBudget, setTotalBudget] = useState(currentBudget.totalBudget);
   const [categories, setCategories] = useState(currentBudget.categories);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -67,7 +67,7 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues, editingBud
       }
     }
 
-    fetchCategories()
+    void fetchCategories()
   }, [])
 
   type FormData = z.infer<typeof formSchema>
@@ -76,8 +76,8 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues, editingBud
     defaultValues: defaultValues ?? {
       categoryId: "",
       amount: 0,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
+      startDate: new Date(),
+      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
       icon: "",
     },
   })
@@ -85,14 +85,20 @@ export function BudgetFormDialog({ open, onOpenChange, defaultValues, editingBud
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
+      const budgetValues = {
+        ...values,
+        startDate: values.startDate.toISOString(),
+        endDate: values.endDate.toISOString(),
+      }
+
       if (editingBudget) {
-        await updateBudget(editingBudget.id, values)
+        await updateBudget(editingBudget.id, budgetValues)
         toast({
           title: "Budget updated",
           description: "Your budget has been successfully updated.",
         })
       } else {
-        await createBudget(values)
+        await createBudget(budgetValues)
         toast({
           title: "Budget created",
           description: "Your new budget has been successfully created.",

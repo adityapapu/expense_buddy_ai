@@ -145,7 +145,7 @@ export function FriendsSettings() {
     }
   }
 
-  const handleSearchUsers = async () => {
+  const handleSearchUsers = useCallback(async () => {
     if (!searchQuery.trim()) {
       setSearchResults([])
       return
@@ -161,7 +161,7 @@ export function FriendsSettings() {
         toast({
           variant: "destructive",
           title: "Error",
-          description: result.message,
+          description: response.message,
         })
       }
     } catch (error) {
@@ -174,7 +174,7 @@ export function FriendsSettings() {
     } finally {
       setSubmitting(false)
     }
-  }
+  }, [searchQuery, toast, setSubmitting, setSearchResults])
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -195,7 +195,7 @@ export function FriendsSettings() {
     if (name) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     }
-    return email ? email[0].toUpperCase() : '?'
+    return email?.[0]?.toUpperCase() || '?'
   }
 
   const UserAvatar = ({ user }: { user: any }) => (

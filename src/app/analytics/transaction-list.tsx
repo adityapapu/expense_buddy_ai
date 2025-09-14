@@ -54,7 +54,7 @@ export function TransactionList({ dateRange, selectedCategories }: TransactionLi
     }
 
     // Debounce search to avoid too many API calls
-    const debounceTimer = setTimeout(fetchTransactions, searchTerm ? 300 : 0)
+    const debounceTimer = setTimeout(() => void fetchTransactions(), searchTerm ? 300 : 0)
 
     return () => clearTimeout(debounceTimer)
   }, [dateRange, selectedCategories, searchTerm, sortBy, offset])
